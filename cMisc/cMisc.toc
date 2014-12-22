@@ -1,0 +1,9 @@
+## Interface: 60000
+## Title: cMisc
+## Notes: Cokedriver's Miscellaneous Modification's Addon
+## Author: Cokedriver
+## Version: 6.0.0
+## SavedVariables: cMiscDB
+## OptionalDeps: Blizzard_TradeSkillUI
+
+cMisc.lua

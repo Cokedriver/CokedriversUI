@@ -1,0 +1,8 @@
+## Interface: 60000
+## Title: cChat
+## Notes: Cokedriver's Chat Modification Addon
+## Author: Cokedriver
+## Version: 6.0.0
+## SavedVariables: cChatDB
+
+cChat.lua

@@ -1,0 +1,8 @@
+## Interface: 60000
+## Title: cUnitframes
+## Notes: Cokedriver's Unitframe Modification Addon
+## Author: Cokedriver
+## Version: 6.0.0
+## SavedVariables: cUnitframesDB
+
+cUnitframes.lua

@@ -1,0 +1,8 @@
+## Interface: 60000
+## Title: cFonts
+## Notes: Cokedriver's Font Modification Addon
+## Author: Cokedriver
+## Version: 6.0.0
+## SavedVariables: cFontsDB
+
+cFonts.lua
