@@ -1,7 +1,6 @@
-local Addon = CreateFrame("Frame", UIParent)
-
-Addon:RegisterEvent("ADDON_LOADED")
-Addon:SetScript("OnEvent", function(self, event, arg1)
+local cFonts = CreateFrame("Frame")
+cFonts:RegisterEvent("ADDON_LOADED")
+cFonts:SetScript("OnEvent", function(self, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == "cFonts" then
 
 		local function SetFont(obj, font, size, style, r, g, b, sr, sg, sb, sox, soy)
@@ -96,11 +95,13 @@ Addon:SetScript("OnEvent", function(self, event, arg1)
 
 		for _,butt in pairs(PaperDollTitlesPane.buttons) do butt.text:SetFontObject(GameFontHighlightSmallLeft) end
 		
-		SlashCmdList['RELOADUI'] = function()
-			ReloadUI()
-		end
-		SLASH_RELOADUI1 = '/rl'
+		--self:UnregisterEvent("ADDON_LOADED")
 		
-		self:UnregisterEvent("ADDON_LOADED")
 	end
+	
+	SlashCmdList['RELOADUI'] = function()
+		ReloadUI()
+	end
+	SLASH_RELOADUI1 = '/rl'
+	
 end)

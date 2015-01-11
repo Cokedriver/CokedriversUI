@@ -74,12 +74,43 @@ cChat:SetScript("OnEvent", function(self, event, arg1)
 		CHAT_INSTANCE_CHAT_LEADER_GET = '|Hchannel:INSTANCE_CHAT|h[IL]|h %s:\32';
 
 
+		local channelFormat 
+		do
+			local a, b = '.*%[(.*)%].*', '%%[%1%%]'
+			channelFormat = {
+				[1] = {gsub(CHAT_BATTLEGROUND_GET, a, b), '[BG]'},
+				[2] = {gsub(CHAT_BATTLEGROUND_LEADER_GET, a, b), '[BGL]'},
+
+				[3] = {gsub(CHAT_GUILD_GET, a, b), '[G]'},
+				[4] = {gsub(CHAT_OFFICER_GET, a, b), '[O]'},
+				
+				[5] = {gsub(CHAT_PARTY_GET, a, b), '[P]'},
+				[6] = {gsub(CHAT_PARTY_LEADER_GET, a, b), '[PL]'},
+				[7] = {gsub(CHAT_PARTY_GUIDE_GET, a, b), '[PL]'},
+
+				[8] = {gsub(CHAT_RAID_GET, a, b), '[R]'},
+				[9] = {gsub(CHAT_RAID_LEADER_GET, a, b), '[RL]'},
+				[10] = {gsub(CHAT_RAID_WARNING_GET, a, b), '[RW]'},
+
+				[11] = {gsub(CHAT_FLAG_AFK, a, b), '[AFK] '},
+				[12] = {gsub(CHAT_FLAG_DND, a, b), '[DND] '},
+				[13] = {gsub(CHAT_FLAG_GM, a, b), '[GM] '},
+			}
+		end
+
+
 		local AddMessage = ChatFrame1.AddMessage
 		local function FCF_AddMessage(self, text, ...)
 			if (type(text) == 'string') then
 				text = gsub(text, '(|HBNplayer.-|h)%[(.-)%]|h', '%1%2|h')
 				text = gsub(text, '(|Hplayer.-|h)%[(.-)%]|h', '%1%2|h')
-				text = gsub(text, '%[(%d0?)%. (.-)%]', '[%1]') 			
+				text = gsub(text, '%[(%d0?)%. (.-)%]', '[%1]') 
+				
+				
+				for i = 1, #channelFormat  do
+					text = gsub(text, channelFormat[i][1], channelFormat[i][2])
+				end
+				
 			end
 
 			return AddMessage(self, text, ...)
@@ -126,105 +157,14 @@ cChat:SetScript("OnEvent", function(self, event, arg1)
 			end
 		end)
 
-		local linktypes = {
-			-- These use GameTooltip:
-			achievement    = true,
-			enchant        = true,
-			glyph          = true,
-			item           = true,
-			instancelock   = true,
-			quest          = true,
-			spell          = true,
-			talent         = true,
-			unit           = true,
-			currency	   = true,
-			-- This uses FloatingBattlePetTooltip:
-			battlepet      = true,
-			-- This uses FloatingPetBattleAbilityTooltip:
-			battlePetAbil = true,
-			-- This uses FloatingGarrisonFollowerTooltip:
-			garrfollower  = true,
-			-- This uses FloatingGarrisonFollowerAbilityTooltip:
-			garrfollowerability = true,
-			-- This uses FloatingGarrisonMissionTooltip:
-			garrmission   = true,
-		}
-
-		local function OnHyperlinkEnter(frame, link, text)
-			local linkType = strsplit(":", link)
-			if linktypes[linkType] and not IsModifiedClick() then
-				ChatFrame_OnHyperlinkShow(frame, link, texT)
-			end
-		end	
-		
-		local function OnHyperlinkLeave(frame, link, text)
-			local linkType = strsplit(":", link)
-			if linktypes[linkType] and not IsModifiedClick() then
-				ChatFrame_OnHyperlinkShow(frame, link, text)
-			end
-		end		
-		
 		local function ModChat(self)
 			local chat = _G[self]
 			local font, fontsize, fontflags = chat:GetFont()
 			chat:SetFont([[Interface\AddOns\cChat\Media\Expressway_Free_NORMAL.ttf]], fontsize, dbOutline and 'THINOUTLINE' or fontflags)
-			chat:SetClampedToScreen(false)
-
-			chat:SetClampRectInsets(0, 0, 0, 0)
-			chat:SetMaxResize(UIParent:GetWidth(), UIParent:GetHeight())
-			chat:SetMinResize(150, 25)
-
+			
 			if (self ~= 'ChatFrame2') then
 				chat.AddMessage = FCF_AddMessage
 			end
-
-			chat:HookScript('OnHyperlinkEnter', OnHyperlinkEnter)
-			chat:HookScript('OnHyperlinkLeave', OnHyperlinkLeave)
-			
-			local buttonUp = _G[self..'ButtonFrameUpButton']
-			buttonUp:SetAlpha(0)
-			buttonUp:EnableMouse(false)
-
-			local buttonDown = _G[self..'ButtonFrameDownButton']
-			buttonDown:SetAlpha(0)
-			buttonDown:EnableMouse(false)
-
-			local buttonBottom = _G[self..'ButtonFrameBottomButton']
-			if (enableBottomButton) then
-				buttonBottom:Hide()
-				buttonBottom:ClearAllPoints()
-				buttonBottom:SetPoint('BOTTOMLEFT', chat, -1, -3)
-				buttonBottom:HookScript('OnClick', function(self)
-					self:Hide()
-				end)
-			else
-				buttonBottom:SetAlpha(0)
-				buttonBottom:EnableMouse(false)
-			end
-			
-			for _, texture in pairs({
-				'ButtonFrameBackground',
-				'ButtonFrameTopLeftTexture',
-				'ButtonFrameBottomLeftTexture',
-				'ButtonFrameTopRightTexture',
-				'ButtonFrameBottomRightTexture',
-				'ButtonFrameLeftTexture',
-				'ButtonFrameRightTexture',
-				'ButtonFrameBottomTexture',
-				'ButtonFrameTopTexture',
-			}) do
-				_G[self..texture]:SetTexture(nil)
-			end	
-			
-			hooksecurefunc('ChatEdit_UpdateHeader', function(editBox)
-				local type = editBox:GetAttribute('chatType')
-				if (not type) then
-					return
-				end
-
-				local info = ChatTypeInfo[type]
-				_G[self..'EditBox']:SetBackdropBorderColor(info.r, info.g, info.b)
-			end)			
 		end
 
 		local function SetChatStyle()
@@ -263,8 +203,77 @@ cChat:SetScript("OnEvent", function(self, event, arg1)
 			if (event == 'CHAT_MSG_WHISPER' or event == 'CHAT_MSG_BN_WHISPER') then
 				PlaySoundFile([[Interface\AddOns\cChat\Media\Whisper.mp3]])
 			end
-		end)	
-	
+		end)
+
+
+		if (enableHyperlinkTooltip) then
+
+			--[[
+
+				All Create for hyperlink.lua goes to Neal, ballagarba, and Tuks.
+				Neav UI = http://www.wowinterface.com/downloads/info13981-NeavUI.html.
+				Tukui = http://www.tukui.org/download.php.
+				Edited by Cokedriver.
+				
+			]]
+
+			local _G = getfenv(0)
+			local orig1, orig2 = {}, {}
+			local GameTooltip = GameTooltip
+
+			local linktypes = {
+				item = true, 
+				enchant = true, 
+				spell = true, 
+				quest = true, 
+				unit = true, 
+				talent = true, 
+				achievement = true, 
+				glyph = true
+			}
+
+			local function OnHyperlinkEnter(frame, link, ...)
+				local linktype = link:match('^([^:]+)')
+				if (linktype and linktypes[linktype]) then
+					GameTooltip:SetOwner(ChatFrame1, 'ANCHOR_CURSOR', 0, 20)
+					GameTooltip:SetHyperlink(link)
+					GameTooltip:Show()
+				else
+					GameTooltip:Hide()
+				end
+
+				if (orig1[frame]) then 
+					return orig1[frame](frame, link, ...) 
+				end
+			end
+
+			local function OnHyperlinkLeave(frame, ...)
+				GameTooltip:Hide()
+
+				if (orig2[frame]) then 
+					return orig2[frame](frame, ...) 
+				end
+			end
+
+			local function EnableItemLinkTooltip()
+				for _, v in pairs(CHAT_FRAMES) do
+					local chat = _G[v]
+					if (chat and not chat.URLCopy) then
+						orig1[chat] = chat:GetScript('OnHyperlinkEnter')
+						chat:SetScript('OnHyperlinkEnter', OnHyperlinkEnter)
+
+						orig2[chat] = chat:GetScript('OnHyperlinkLeave')
+						chat:SetScript('OnHyperlinkLeave', OnHyperlinkLeave)
+						chat.URLCopy = true
+					end
+				end
+			end
+			hooksecurefunc('FCF_OpenTemporaryWindow', EnableItemLinkTooltip)
+			EnableItemLinkTooltip()
+		else
+			return
+		end
+		
 	end
 	
 	SlashCmdList['RELOADUI'] = function()
