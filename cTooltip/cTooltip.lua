@@ -17,9 +17,6 @@ local healIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:0:0
 local damagerIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:0:0:64:64:20:39:22:41|t'
 
 local classColor = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
-local fontSize = 15
-local fontNormal = [[Interface\AddOns\cTooltip\Media\Expressway_Free_NORMAL.ttf]]
-local fontBold = [[Interface\AddOns\cTooltip\Media\Expressway_Rg _BOLD.ttf]]
 local fontOutline = true
 local disableFade = false                     		-- Can cause errors or a buggy tooltip!
 local abbrevRealmNames = true 	
@@ -44,7 +41,7 @@ local healthbar = {
 		apply = false,
 		color =	{ r = 1, g = 1, b = 0},
 	},		
-	fontSize = 15,
+	--fontSize = 15,
 }		
 
 SlashCmdList['RELOADUI'] = function()
@@ -52,23 +49,7 @@ SlashCmdList['RELOADUI'] = function()
 end
 SLASH_RELOADUI1 = '/rl'
 
-	-- Some tooltip changes
-
-if (fontOutline) then
-	GameTooltipHeaderText:SetFont(fontBold, (fontSize + 2), 'THINOUTLINE')
-	GameTooltipHeaderText:SetShadowOffset(0, 0)
-
-	GameTooltipText:SetFont(fontNormal, (fontSize), 'THINOUTLINE')
-	GameTooltipText:SetShadowOffset(0, 0)
-
-	GameTooltipTextSmall:SetFont(fontNormal, (fontSize), 'THINOUTLINE')
-	GameTooltipTextSmall:SetShadowOffset(0, 0)
-else
-	GameTooltipHeaderText:SetFont(fontBold, (fontSize + 2))
-	GameTooltipText:SetFont(fontNormal, (fontSize))
-	GameTooltipTextSmall:SetFont(fontNormal, (fontSize))
-end
-
+--GameTooltipHeaderText:SetFont([[Interface/Addons/cTooltip/Media/Expressway_Rg_BOLD.ttf]], 18, 'THINOUTLINE')
 GameTooltipStatusBar:SetHeight(7)
 GameTooltipStatusBar:SetBackdrop({bgFile = 'Interface\\Buttons\\WHITE8x8'})
 GameTooltipStatusBar:SetBackdropColor(0, 1, 0, 0.3)
@@ -86,7 +67,7 @@ local CUSTOM_FACTION_BAR_COLORS = {
 function GameTooltip_UnitColor(unit)
 	local r, g, b
 
-	if (UnitIsDead(unit) or UnitIsGhost(unit) or UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit)) then
+	if (UnitIsDead(unit) or UnitIsGhost(unit)) then
 		r = 0.5
 		g = 0.5
 		b = 0.5 
@@ -507,11 +488,6 @@ GameTooltip:HookScript('OnTooltipSetUnit', function(self, ...)
 			end)
 		end
 
-			--[[ Show player item lvl
-
-		if (showItemLevel and ilvl > 1) then
-			GameTooltip:AddLine(STAT_AVERAGE_ITEM_LEVEL .. ': ' .. '|cffFFFFFF'..ilvl..'|r')
-		end]]
 	end
 end)
 
@@ -571,14 +547,9 @@ local format = string.format
 local bar = GameTooltipStatusBar
 bar.Text = bar:CreateFontString(nil, 'OVERLAY')
 bar.Text:SetPoint('CENTER', bar, healthbar.textPos, 0, 1)
+bar.Text:SetFont('Fonts\\FRIZQT__.TTF', 14, 'THINOUTLINE')
 
-if (healthbar.showOutline) then
-	bar.Text:SetFont(fontNormal, healthbar.fontSize, 'THINOUTLINE')
-	bar.Text:SetShadowOffset(0, 0)
-else
-	bar.Text:SetFont(fontNormal, healthbar.fontSize)
-	bar.Text:SetShadowOffset(1, -1)
-end
+
 
 local function ColorGradient(perc, ...)
 	if (perc >= 1) then

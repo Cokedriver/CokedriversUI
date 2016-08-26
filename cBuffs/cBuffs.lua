@@ -22,7 +22,7 @@ SecondsToTimeAbbrev = SecondsToTimeAbbrevHook
 
 
 hooksecurefunc('AuraButton_Update', function(buttonName, index)
-	local font = [[Fonts\ARIALN.ttf]]
+	local font = 'Fonts\\ARIALN.ttf'
 	local button = _G[buttonName..index]
 	local duration = _G[buttonName..index..'Duration']
 	if (duration) then

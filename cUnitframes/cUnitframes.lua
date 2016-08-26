@@ -1,8 +1,10 @@
 local cUnitframes = CreateFrame("Frame")
 cUnitframes:RegisterEvent("ADDON_LOADED")
 cUnitframes:SetScript("OnEvent", function(self, event, arg1)
+
 	if event == "ADDON_LOADED" and arg1 == "cUnitframes" then
 		local UnitScale = 1.2
+		local UnitframeFont = [[Interface\AddOns\cUnitframes\Media\Expressway_Rg _BOLD.ttf]]
 		
 		--[[ Unit Font Style ]]--
 		----------------------------------------------------------
@@ -74,7 +76,7 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 				else
 					color = PET_COLOR
 				end
-			elseif UnitIsDeadOrGhost(unit) or UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) then
+			elseif UnitIsDeadOrGhost(unit) then
 				color = GRAY_FONT_COLOR
 			else
 				color = CUSTOM_FACTION_BAR_COLORS[UnitIsEnemy(unit, "player") and 1 or UnitReaction(unit, "player") or 5]
@@ -104,7 +106,7 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			Boss5TargetFrameNameBackground, 
 			
 		}) do
-			region:SetTexture(0, 0, 0, 0.5)
+			region:SetColorTexture(0, 0, 0, 0.5)
 		end
 		----------------------------------------------------------
 		
@@ -116,7 +118,7 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			TargetFrameTextureFrameName,
 			FocusFrameTextureFrameName,
 		}) do
-			names:SetFont([[Interface\AddOns\cUnitframes\Media\Expressway_Rg _BOLD.ttf]], 16)
+			names:SetFont(UnitframeFont, 16)
 		
 		end
 		----------------------------------------------------------
@@ -127,20 +129,30 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		-- PlayerFrame
 		hooksecurefunc("PlayerFrame_UpdateLevelTextAnchor", function(level)
 		  if ( level >= 100 ) then
-			PlayerLevelText:SetPoint("CENTER", PlayerFrameTexture, "CENTER", -60.5, -15);
+			PlayerLevelText:SetPoint("CENTER", PlayerFrameTexture, "CENTER", -61, -16);
 		  else
-			PlayerLevelText:SetPoint("CENTER", PlayerFrameTexture, "CENTER", -61, -15);
+			PlayerLevelText:SetPoint("CENTER", PlayerFrameTexture, "CENTER", -62, -16);
 		  end
 		end)
 		
 		-- TargetFrame
 		hooksecurefunc("TargetFrame_UpdateLevelTextAnchor",  function(self, targetLevel)
 		  if ( targetLevel >= 100 ) then
-			self.levelText:SetPoint("CENTER", 62, -15);
+			self.levelText:SetPoint("CENTER", 62, -16);
 		  else
-			self.levelText:SetPoint("CENTER", 62, -15);
+			self.levelText:SetPoint("CENTER", 62, -16);
 		  end
 		end)
+		----------------------------------------------------------
+		--[[] Unit Healthbar and Powerbar Text
+		for _, HPMPText in pairs({
+			PlayerFrameHealthBarText,
+			PlayerFrameManaBarText,
+			TargetFrameTextureFrameHealthBarText,
+			TargetFrameTextureFrameManaBarText,
+		}) do
+			HPMPText:SetFont('Fonts\\ARIALN.ttf', 12, 'THINOUTLINE')
+		end]]
 		----------------------------------------------------------
 		
 		
@@ -148,14 +160,16 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		----------------------------------------------------------
 		-- Player Castbar
 		CastingBarFrame:SetScale(UnitScale)
+		--CastingBarFrame:ClearAllPoints()
+		--CastingBarFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 		
-		-- Target Castbar
+		--[[ Target Castbar
 		Target_Spellbar_AdjustPosition = function() end
 		TargetFrameSpellBar:SetParent(UIParent)
 		TargetFrameSpellBar:ClearAllPoints()
 		TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
 		TargetFrameSpellBar:SetScale(UnitScale)
-		TargetFrameSpellBar:SetScript("OnShow", nil)
+		TargetFrameSpellBar:SetScript("OnShow", nil)]]
 		----------------------------------------------------------
 		
 		
@@ -181,25 +195,25 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		
 		--[[ Arena Frames Scaling ]]--
 		----------------------------------------------------------
-		local function ScaleArenaFrames()
-			for i = 1, MAX_ARENA_ENEMIES do
-				_G["ArenaPrepFrame"..i]:SetScale(UnitScale)
-				_G["ArenaEnemyFrame"..i]:SetScale(UnitScale)
-			end
-		end
+		--local function ScaleArenaFrames()
+			--for i = 1, MAX_ARENA_ENEMIES do
+				--_G["ArenaPrepFrame"..i]:SetScale(UnitScale)
+				--_G["ArenaEnemyFrame"..i]:SetScale(UnitScale)
+			--end
+		--end
 
-		if IsAddOnLoaded("Blizzard_ArenaUI") then
-			ScaleArenaFrames()
-		else
-			local f = CreateFrame("Frame")
-			f:RegisterEvent("ADDON_LOADED")
-			f:SetScript("OnEvent", function(self, event, addon)
-				if addon == "Blizzard_ArenaUI" then
-					self:UnregisterEvent(event)
-					ScaleArenaFrames()
-				end
-			end)
-		end
+		--if IsAddOnLoaded("Blizzard_ArenaUI") then
+			--ScaleArenaFrames()
+		--else
+			--local f = CreateFrame("Frame")
+			--f:RegisterEvent("ADDON_LOADED")
+			--f:SetScript("OnEvent", function(self, event, addon)
+				--if addon == "Blizzard_ArenaUI" then
+					--self:UnregisterEvent(event)
+					--ScaleArenaFrames()
+				--end
+			--end)
+		--end
 		----------------------------------------------------------
 		
 		
@@ -210,12 +224,161 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		end
 		----------------------------------------------------------
 		
-		--self:UnregisterEvent("ADDON_LOADED")
+		self:UnregisterEvent("ADDON_LOADED")
 	end
 
-	SlashCmdList['RELOADUI'] = function()
-		ReloadUI()
+	-- Nameplates Percentage
+	
+	local frequency = 0.2 -- how frequently to look for new nameplates and update visible percents
+	local numChildren = 0 -- number of WorldFrame's children
+	local overlays = {} -- indexed by overlay frame added to each nameplate's statusBar
+
+	local PercentFrame = CreateFrame("Frame",nil,UIParent)
+	PercentFrame.timer = 0
+	PercentFrame.knownChildren = 0 -- number of WorldFrame's children that we know about
+
+	-- updates the percentOverlay text on the nameplate's statusbar
+	local function UpdatePercent(self)
+		local parent = self:GetParent()
+		local value = parent:GetValue()
+		local _,maxValue = parent:GetMinMaxValues()
+		if maxValue and value<maxValue then
+			self:SetText(('|cFF%2x%2x%2x%s|r'):format(255, 255, 51, format("%d%%",100*value/maxValue)))
+		else
+			self:SetText("") -- blank if no relevant values or value is maxValue (100% life)
+		end
 	end
-	SLASH_RELOADUI1 = '/rl'
+
+	-- when a nameplate shows, add it to frame.statusBars
+	local function ShowPercent(self)
+		overlays[self.percentOverlay] = 1
+	end
+
+	-- when a nameplate hides, remove it from frame.statusBars
+	local function HidePercent(self)
+		overlays[self.percentOverlay] = nil
+		self.percentOverlay:SetText("") -- blank for when nameplate reused
+	end
+
+	-- look for new nameplates that don't have a percent overlay and add one
+	function PercentFrame:ScanNameplates(...)
+	  for i=1,select("#",...) do
+		local plate = select(i,...)
+			local name = plate:GetName()
+			if name and name:match("^NamePlate") then
+				-- the statusBar is the first child of the first child of the nameplate
+				local statusBar = plate:GetChildren():GetChildren()
+				if not statusBar.percentOverlay then
+					statusBar.percentOverlay = statusBar:CreateFontString(nil,"OVERLAY","ReputationDetailFont")
+					local percent = statusBar.percentOverlay
+					percent:SetPoint("CENTER")
+					statusBar:HookScript("OnShow",ShowPercent)
+					statusBar:HookScript("OnHide",HidePercent)
+					overlays[statusBar.percentOverlay] = 1 -- add new child to next update batch
+				end
+		end
+	  end
+	end
+
+	function PercentFrame:OnUpdate(elapsed)
+		self.timer = self.timer + elapsed
+		if self.timer > frequency then
+			self.timer = 0
+			-- first look for any new nameplates (if WorldFrame has a new kid, it's likely a nameplate)
+		numChildren = WorldFrame:GetNumChildren()
+			if numChildren > self.knownChildren then
+				self.knownChildren = numChildren
+		  self:ScanNameplates(WorldFrame:GetChildren())
+		end
+			-- next update percents for all visible nameplate statusBars
+			for overlay in pairs(overlays) do
+				UpdatePercent(overlay)
+			end
+	  end
+	end
+	PercentFrame:SetScript("OnUpdate",PercentFrame.OnUpdate)
+
+	-- Borrowerd from nPlates by Grimsbain
+	local config = {
+		-- Colors by threat. Green = Tanking, Orange = Loosing Threat, Red = Lost Threat
+		colorNameWithThreat = false,
+
+		showLevel = true,
+		showServerName = false,
+		abbrevLongNames = true,
+
+		-- Use class colors on all player nameplates.
+		alwaysUseClassColors = true,
+	}	
+
+	local function RGBHex(r, g, b)
+		if ( type(r) == 'table' ) then
+			if ( r.r ) then
+				r, g, b = r.r, r.g, r.b
+			else
+				r, g, b = unpack(r)
+			end
+		end
+
+		return ('|cff%02x%02x%02x'):format(r * 255, g * 255, b * 255)
+	end	
+	local len = string.len
+	local gsub = string.gsub
+	local function UpdateName(frame)
+		if ( string.match(frame.displayedUnit,'nameplate') ~= 'nameplate' ) then return end
+
+
+		if ( not ShouldShowName(frame) ) then
+			frame.name:Hide()
+		else
+
+				-- Friendly Nameplate Class Color
+
+			if ( config.alwaysUseClassColors ) then
+				if ( UnitIsPlayer(frame.displayedUnit) ) then
+					frame.name:SetTextColor(frame.healthBar:GetStatusBarColor())
+					DefaultCompactNamePlateFriendlyFrameOptions.useClassColors = true
+				end
+			end
+
+				-- Shorten Long Names
+
+			local newName = GetUnitName(frame.displayedUnit, config.showServerName) or 'Unknown'
+			if ( config.abbrevLongNames ) then
+				newName = (len(newName) > 20) and gsub(newName, '%s?(.[\128-\191]*)%S+%s', '%1. ') or newName
+			end
+
+				-- Level
+
+			if ( config.showLevel ) then
+				local playerLevel = UnitLevel('player')
+				local targetLevel = UnitLevel(frame.displayedUnit)
+				local difficultyColor = GetRelativeDifficultyColor(playerLevel, targetLevel)
+				local levelColor = RGBHex(difficultyColor.r, difficultyColor.g, difficultyColor.b)
+
+				if ( targetLevel == -1 ) then
+					frame.name:SetText(newName)
+				else
+					frame.name:SetText('|cffffff00|r'..levelColor..targetLevel..'|r '..newName)
+				end
+			else
+				frame.name:SetText(newName)
+			end
+
+				-- Color Name To Threat Status
+
+			if ( config.colorNameWithThreat ) then
+				local isTanking, threatStatus = UnitDetailedThreatSituation('player', frame.displayedUnit)
+				if ( isTanking and threatStatus ) then
+					if ( threatStatus >= 3 ) then
+						frame.name:SetTextColor(0,1,0)
+					elseif ( threatStatus == 2 ) then
+						frame.name:SetTextColor(1,0.6,0.2)
+					end
+				end
+			end
+		end
+	end
+	hooksecurefunc('CompactUnitFrame_UpdateName', UpdateName)
 
 end)

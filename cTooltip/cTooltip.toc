@@ -1,8 +1,7 @@
-## Interface: 60000
+## Interface: 70000
 ## Title: cTooltip
 ## Notes: Cokedriver's Tooltip Modification Addon
 ## Author: Cokedriver
-## Version: 6.0.0
-## SavedVariables: cTooltipDB
+## Version: 7.0.0
 
 cTooltip.lua
