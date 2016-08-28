@@ -482,57 +482,79 @@ end
 -- Powerbar From NeavUI
 if cPowerBar == true then
 	local PowerDB = {
-		position = {
-			selfAnchor = "CENTER",
-			frameParent = "UIParent",
-			offSetX = 0,
-			offSetY = -100
-		},
-		sizeWidth = 200,
-		
-		showCombatRegen = true, 
+		position = {'CENTER', UIParent, 0, -150},
+		sizeWidth = 200,		
+		scale = 1.0,
+
+		showCombatRegen = true,
 
 		activeAlpha = 1,
-		inactiveAlpha = 0.5,
+		inactiveAlpha = 0.3,
 		emptyAlpha = 0,
-		
+
 		valueAbbrev = true,
-			
+
+		valueFont = 'Fonts\\ARIALN.ttf',
 		valueFontSize = 20,
 		valueFontOutline = true,
 		valueFontAdjustmentX = 0,
 
 		showSoulshards = true,
 		showHolypower = true,
-		showMana = true,
-		showFocus = true,
-		showRage = true,
-		showInsanity = true,
-		
-		
-		extraFontSize = 16,                             -- The fontsize for the holypower and soulshard number
-		extraFontOutline = true,                        
-			
-		
+		showComboPoints = true,
+		showChi = true,
+		showRunes = true,
+		showArcaneCharges = true,
+
+		-- Resource text shown above the bar.
+		extraFont = 'Fonts\\ARIALN.ttf',
+		extraFontSize = 22,
+		extraFontOutline = true,
+
+		mana = {
+			show = true,
+		},
+
 		energy = {
 			show = true,
-			showComboPoints = true,
-			comboPointsBelow = false,
-			
-			comboFontSize = 16,
-			comboFontOutline = true,
 		},
-		
-		
+
+		focus = {
+			show = true,
+		},
+
+		rage = {
+			show = true,
+		},
+
+		lunarPower = {
+			show = true,
+		},
+
 		rune = {
-			showRuneCooldown = true,
-		   
-			runeFontSize = 16,
+			show = true,
+
+			runeFont = 'Fonts\\ARIALN.ttf',
+			runeFontSize = 20,
 			runeFontOutline = true,
 		},
-	}
 
-	local playerClass = select(2, UnitClass('player'))
+		insanity = {
+			show = true,
+		},
+
+		maelstrom = {
+			show = true,
+		},
+
+		fury = {
+			show = true,
+		},
+
+		pain = {
+			show = true,
+		},
+	}
 
 	local format = string.format
 	local floor = math.floor
@@ -557,195 +579,125 @@ if cPowerBar == true then
 		end
 	end
 
-	local ComboColor = {
-		[1] = {r = 1.0, g = 1.0, b = 1.0},
-		[2] = {r = 1.0, g = 1.0, b = 1.0},
-		[3] = {r = 1.0, g = 1.0, b = 1.0},
-		[4] = {r = 0.9, g = 0.7, b = 0.0},
-		[5] = {r = 1.0, g = 0.0, b = 0.0},
-	}
+	local playerClass = select(2, UnitClass('player'))
 
-	local RuneColor = {
-		[1] = {r = 0, g = 0.82, b = 1},
-		[2] = {r = 0, g = 0.82, b = 1},
-		[3] = {r = 0, g = 0.82, b = 1},
-		[4] = {r = 0, g = 0.82, b = 1},
-		[5] = {r = 0, g = 0.82, b = 1},
-		[6] = {r = 0, g = 0.82, b = 1},
-	}
+	local PBFrame = CreateFrame('Frame', nil, UIParent)
+	PBFrame:SetScale(PowerDB.scale)
+	PBFrame:SetSize(18, 18)
+	PBFrame:SetPoint(unpack(PowerDB.position))
+	PBFrame:EnableMouse(false)
 
-	local MPFrame = CreateFrame('Frame', nil, UIParent)
-	MPFrame:SetScale(1.4)
-	MPFrame:SetSize(18, 18)
-	MPFrame:SetPoint(PowerDB.position.selfAnchor, PowerDB.position.frameParent, PowerDB.position.offSetX, PowerDB.position.offSetY)
-	MPFrame:EnableMouse(false)
-
-	MPFrame:RegisterEvent('PLAYER_REGEN_ENABLED')
-	MPFrame:RegisterEvent('PLAYER_REGEN_DISABLED')
-	MPFrame:RegisterEvent('PLAYER_ENTERING_WORLD')
-	MPFrame:RegisterUnitEvent('UNIT_COMBO_POINTS', 'player')
-	MPFrame:RegisterEvent('PLAYER_TARGET_CHANGED')
-
-	if (PowerDB.rune.showRuneCooldown) then
-		MPFrame:RegisterEvent('RUNE_TYPE_UPDATE')
-	end
-
-	MPFrame:RegisterUnitEvent('UNIT_DISPLAYPOWER', 'player')
-	MPFrame:RegisterUnitEvent('UNIT_POWER_FREQUENT', 'player')
-	MPFrame:RegisterEvent('UPDATE_SHAPESHIFT_FORM')
+	PBFrame:RegisterEvent('PLAYER_REGEN_ENABLED')
+	PBFrame:RegisterEvent('PLAYER_REGEN_DISABLED')
+	PBFrame:RegisterEvent('PLAYER_ENTERING_WORLD')
+	PBFrame:RegisterUnitEvent('UNIT_COMBO_POINTS', 'player')
+	PBFrame:RegisterEvent('PLAYER_TARGET_CHANGED')
+	PBFrame:RegisterEvent('RUNE_TYPE_UPDATE')
+	PBFrame:RegisterUnitEvent('UNIT_DISPLAYPOWER', 'player')
+	PBFrame:RegisterUnitEvent('UNIT_POWER_FREQUENT', 'player')
+	PBFrame:RegisterEvent('UPDATE_SHAPESHIFT_FORM')
 
 	if (PowerDB.showCombatRegen) then
-		MPFrame:RegisterUnitEvent('UNIT_AURA', 'player')
+		PBFrame:RegisterUnitEvent('UNIT_AURA', 'player')
 	end
 
-	MPFrame:RegisterUnitEvent('UNIT_ENTERED_VEHICLE', 'player')
-	MPFrame:RegisterUnitEvent('UNIT_ENTERING_VEHICLE', 'player')
-	MPFrame:RegisterUnitEvent('UNIT_EXITED_VEHICLE', 'player')
-	MPFrame:RegisterUnitEvent('UNIT_EXITING_VEHICLE', 'player')
+	PBFrame:RegisterUnitEvent('UNIT_ENTERED_VEHICLE', 'player')
+	PBFrame:RegisterUnitEvent('UNIT_ENTERING_VEHICLE', 'player')
+	PBFrame:RegisterUnitEvent('UNIT_EXITED_VEHICLE', 'player')
+	PBFrame:RegisterUnitEvent('UNIT_EXITING_VEHICLE', 'player')
 
-	if (PowerDB.energy.showComboPoints) then
-		MPFrame.ComboPoints = {}
+	if (playerClass == 'WARLOCK' and PowerDB.showSoulshards
+		or playerClass == 'PALADIN' and PowerDB.showHolypower
+		or playerClass == 'ROGUE' and PowerDB.showComboPoints
+		or playerClass == 'DRUID' and PowerDB.showComboPoints
+		or playerClass == 'MONK' and PowerDB.showChi
+		or playerClass == 'MAGE' and PowerDB.showArcaneCharges) then
 
-		for i = 1, 5 do
-			MPFrame.ComboPoints[i] = MPFrame:CreateFontString(nil, 'ARTWORK')
-
-			if (PowerDB.energy.comboFontOutline) then
-				MPFrame.ComboPoints[i]:SetFont('Fonts\\ARIALN.ttf', PowerDB.energy.comboFontSize, 'THINOUTLINE')
-				MPFrame.ComboPoints[i]:SetShadowOffset(0, 0)
-			else
-				MPFrame.ComboPoints[i]:SetFont('Fonts\\ARIALN.ttf', PowerDB.energy.comboFontSize)
-				MPFrame.ComboPoints[i]:SetShadowOffset(1, -1)
-			end
-
-			MPFrame.ComboPoints[i]:SetParent(MPFrame)
-			MPFrame.ComboPoints[i]:SetText(i)
-			MPFrame.ComboPoints[i]:SetAlpha(0)
-		end
-
-		local yOffset = PowerDB.energy.comboPointsBelow and -35 or 0
-		MPFrame.ComboPoints[1]:SetPoint('CENTER', -52, yOffset)
-		MPFrame.ComboPoints[2]:SetPoint('CENTER', -26, yOffset)
-		MPFrame.ComboPoints[3]:SetPoint('CENTER', 0, yOffset)
-		MPFrame.ComboPoints[4]:SetPoint('CENTER', 26, yOffset)
-		MPFrame.ComboPoints[5]:SetPoint('CENTER', 52, yOffset) 	
-	end
-
-	if (playerClass == 'MONK') then
-		MPFrame.Chi = {}
-		MPFrame.Chi.maxChi = 4
-
-		for i = 1, 6 do 
-			MPFrame.Chi[i] = MPFrame:CreateFontString(nil, 'ARTWORK')
-
-			MPFrame.Chi[i]:SetFont('Fonts\\ARIALN.ttf', PowerDB.energy.comboFontSize, 'THINOUTLINE')
-			MPFrame.Chi[i]:SetShadowOffset(0, 0)
-
-			MPFrame.Chi[i]:SetParent(MPFrame)
-			MPFrame.Chi[i]:SetText(i)
-			MPFrame.Chi[i]:SetAlpha(0)
-		end
-
-		local yOffset = PowerDB.energy.comboPointsBelow and -35 or 0
-		MPFrame.Chi[1]:SetPoint('CENTER', -39, yOffset)
-		MPFrame.Chi[2]:SetPoint('CENTER', -13, yOffset)
-		MPFrame.Chi[3]:SetPoint('CENTER', 13, yOffset)
-		MPFrame.Chi[4]:SetPoint('CENTER', 39, yOffset)
-		
-		MPFrame.Chi[5]:Hide()
-		MPFrame.Chi[6]:Hide()
-	end
-
-	if (playerClass == 'WARLOCK' and PowerDB.showSoulshards or playerClass == 'PALADIN' and PowerDB.showHolypower or playerClass == 'PRIEST' and PowerDB.showShadowOrbs) then
-		MPFrame.extraPoints = MPFrame:CreateFontString(nil, 'ARTWORK')
+		PBFrame.extraPoints = PBFrame:CreateFontString(nil, 'ARTWORK')
 
 		if (PowerDB.extraFontOutline) then
-			MPFrame.extraPoints:SetFont('Fonts\\ARIALN.ttf', PowerDB.extraFontSize, 'THINOUTLINE')
-			MPFrame.extraPoints:SetShadowOffset(0, 0)
+			PBFrame.extraPoints:SetFont(PowerDB.extraFont, PowerDB.extraFontSize, 'THINOUTLINE')
+			PBFrame.extraPoints:SetShadowOffset(0, 0)
 		else
-			MPFrame.extraPoints:SetFont('Fonts\\ARIALN.ttf', PowerDB.extraFontSize)
-			MPFrame.extraPoints:SetShadowOffset(1, -1)
+			PBFrame.extraPoints:SetFont(PowerDB.extraFont, PowerDB.extraFontSize)
+			PBFrame.extraPoints:SetShadowOffset(1, -1)
 		end
 
-		MPFrame.extraPoints:SetParent(MPFrame)
-		MPFrame.extraPoints:SetPoint('CENTER', 0, 0)
+		PBFrame.extraPoints:SetParent(PBFrame)
+		PBFrame.extraPoints:SetPoint('CENTER', 0, 0)
 	end
 
-	if (playerClass == 'DEATHKNIGHT' and PowerDB.rune.showRuneCooldown) then
-		for i = 1, 7 do
-			RuneFrame:UnregisterAllEvents()
-			_G['RuneButtonIndividual'..i]:Hide()
-		end
+	if (playerClass == 'DEATHKNIGHT' and PowerDB.showRunes) then
 
-		MPFrame.Rune = {};
+		PBFrame.Rune = {}
 
 		for i = 1, 6 do
-			MPFrame.Rune[i] = MPFrame:CreateFontString(nil, 'ARTWORK')
+			PBFrame.Rune[i] = PBFrame:CreateFontString(nil, 'ARTWORK')
 
 			if (PowerDB.rune.runeFontOutline) then
-				MPFrame.Rune[i]:SetFont('Fonts\\ARIALN.ttf', PowerDB.rune.runeFontSize, 'THINOUTLINE')
-				MPFrame.Rune[i]:SetShadowOffset(0, 0)
+				PBFrame.Rune[i]:SetFont(PowerDB.rune.runeFont, PowerDB.rune.runeFontSize, 'THINOUTLINE')
+				PBFrame.Rune[i]:SetShadowOffset(0, 0)
 			else
-				MPFrame.Rune[i]:SetFont('Fonts\\ARIALN.ttf', PowerDB.rune.runeFontSize)
-				MPFrame.Rune[i]:SetShadowOffset(1, -1)
+				PBFrame.Rune[i]:SetFont(PowerDB.rune.runeFont, PowerDB.rune.runeFontSize)
+				PBFrame.Rune[i]:SetShadowOffset(1, -1)
 			end
 
-			MPFrame.Rune[i]:SetShadowOffset(0, 0)
-			MPFrame.Rune[i]:SetParent(MPFrame)
+			PBFrame.Rune[i]:SetShadowOffset(0, 0)
+			PBFrame.Rune[i]:SetParent(PBFrame)
 		end
 
-		MPFrame.Rune[1]:SetPoint('CENTER', -65, 0)
-		MPFrame.Rune[2]:SetPoint('CENTER', -39, 0)
-		MPFrame.Rune[3]:SetPoint('CENTER', 39, 0)
-		MPFrame.Rune[4]:SetPoint('CENTER', 65, 0)
-		MPFrame.Rune[5]:SetPoint('CENTER', -13, 0)
-		MPFrame.Rune[6]:SetPoint('CENTER', 13, 0)
+		PBFrame.Rune[1]:SetPoint('CENTER', -42, 2)
+		PBFrame.Rune[2]:SetPoint('CENTER', -26, 2)
+		PBFrame.Rune[3]:SetPoint('CENTER', -8, 2)
+		PBFrame.Rune[4]:SetPoint('CENTER', 8, 2)
+		PBFrame.Rune[5]:SetPoint('CENTER', 26, 2)
+		PBFrame.Rune[6]:SetPoint('CENTER', 42, 2)
 	end
 
-	MPFrame.Power = CreateFrame('StatusBar', nil, UIParent)
-	MPFrame.Power:SetScale(1)
-	MPFrame.Power:SetSize(PowerDB.sizeWidth, 8)
-	MPFrame.Power:SetPoint('CENTER', MPFrame, 0, -28)
-	MPFrame.Power:SetStatusBarTexture([[Interface\TargetingFrame\UI-StatusBar]])
-	MPFrame.Power:SetAlpha(0)
+	PBFrame.Power = CreateFrame('StatusBar', nil, UIParent)
+	PBFrame.Power:SetScale(PBFrame:GetScale())
+	PBFrame.Power:SetSize(PowerDB.sizeWidth, 8)
+	PBFrame.Power:SetPoint('CENTER', PBFrame, 0, -28)
+	PBFrame.Power:SetStatusBarTexture([[Interface\TargetingFrame\UI-StatusBar]])
+	PBFrame.Power:SetAlpha(0)
 
-	MPFrame.Power.Value = MPFrame.Power:CreateFontString(nil, 'ARTWORK')
+	PBFrame.Power.Value = PBFrame.Power:CreateFontString(nil, 'ARTWORK')
 
 	if (PowerDB.valueFontOutline) then
-		MPFrame.Power.Value:SetFont('Fonts\\ARIALN.ttf', PowerDB.valueFontSize, 'THINOUTLINE')
-		MPFrame.Power.Value:SetShadowOffset(0, 0)
+		PBFrame.Power.Value:SetFont(PowerDB.valueFont, PowerDB.valueFontSize, 'THINOUTLINE')
+		PBFrame.Power.Value:SetShadowOffset(0, 0)
 	else
-		MPFrame.Power.Value:SetFont('Fonts\\ARIALN.ttf', PowerDB.valueFontSize)
-		MPFrame.Power.Value:SetShadowOffset(1, -1)
+		PBFrame.Power.Value:SetFont(PowerDB.valueFont, PowerDB.valueFontSize)
+		PBFrame.Power.Value:SetShadowOffset(1, -1)
 	end
 
-	MPFrame.Power.Value:SetPoint('CENTER', MPFrame.Power, 0, PowerDB.valueFontAdjustmentX)
-	MPFrame.Power.Value:SetVertexColor(1, 1, 1)
+	PBFrame.Power.Value:SetPoint('CENTER', PBFrame.Power, 0, PowerDB.valueFontAdjustmentX)
+	PBFrame.Power.Value:SetVertexColor(1, 1, 1)
 
-	MPFrame.Power.Background = MPFrame.Power:CreateTexture(nil, 'BACKGROUND')
-	MPFrame.Power.Background:SetAllPoints(MPFrame.Power)
-	MPFrame.Power.Background:SetTexture([[Interface\DialogFrame\UI-DialogBox-Background-Dark]])
-	MPFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
+	PBFrame.Power.Background = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
+	PBFrame.Power.Background:SetAllPoints(PBFrame.Power)
+	PBFrame.Power.Background:SetTexture([[Interface\DialogFrame\UI-DialogBox-Background-Dark]])
+	PBFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
 
-	MPFrame.Power.Below = MPFrame.Power:CreateTexture(nil, 'BACKGROUND')
-	MPFrame.Power.Below:SetHeight(14)
-	MPFrame.Power.Below:SetWidth(14)
-	MPFrame.Power.Below:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowBelow]])
+	PBFrame.Power.Below = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
+	PBFrame.Power.Below:SetHeight(14)
+	PBFrame.Power.Below:SetWidth(14)
+	PBFrame.Power.Below:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowBelow]])
 
-	MPFrame.Power.Above = MPFrame.Power:CreateTexture(nil, 'BACKGROUND')
-	MPFrame.Power.Above:SetHeight(14)
-	MPFrame.Power.Above:SetWidth(14)
-	MPFrame.Power.Above:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowAbove]])
-	MPFrame.Power.Above:SetPoint('BOTTOM', MPFrame.Power.Below, 'TOP', 0, MPFrame.Power:GetHeight())
+	PBFrame.Power.Above = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
+	PBFrame.Power.Above:SetHeight(14)
+	PBFrame.Power.Above:SetWidth(14)
+	PBFrame.Power.Above:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowAbove]])
+	PBFrame.Power.Above:SetPoint('BOTTOM', PBFrame.Power.Below, 'TOP', 0, PBFrame.Power:GetHeight())
 
 	if (PowerDB.showCombatRegen) then
-		MPFrame.mpreg = MPFrame.Power:CreateFontString(nil, 'ARTWORK')
-		MPFrame.mpreg:SetFont('Fonts\\ARIALN.ttf', 12, 'THINOUTLINE')
-		MPFrame.mpreg:SetShadowOffset(0, 0)
-		MPFrame.mpreg:SetPoint('TOP', MPFrame.Power.Below, 'BOTTOM', 0, 4)
-		MPFrame.mpreg:SetParent(MPFrame.Power)
-		MPFrame.mpreg:Show()
+		PBFrame.mpreg = PBFrame.Power:CreateFontString(nil, 'ARTWORK')
+		PBFrame.mpreg:SetFont(PowerDB.valueFont, 12, 'THINOUTLINE')
+		PBFrame.mpreg:SetShadowOffset(0, 0)
+		PBFrame.mpreg:SetPoint('TOP', PBFrame.Power.Below, 'BOTTOM', 0, 4)
+		PBFrame.mpreg:SetParent(PBFrame.Power)
+		PBFrame.mpreg:Show()
 	end
-
 
 	local function GetRealMpFive()
 		local _, activeRegen = GetPowerRegen()
@@ -759,64 +711,31 @@ if cPowerBar == true then
 		end
 	end
 
-	local function SetComboColor(i)
-		local comboPoints = GetComboPoints('player', 'target') or 0
+	local function SetPowerColor()
+		local powerType
+		if ( playerClass == 'ROGUE' or playerClass == 'DRUID' ) then
+			powerType = SPELL_POWER_COMBO_POINTS
+		elseif ( playerClass == 'MONK' ) then
+			powerType = SPELL_POWER_CHI
+		elseif ( playerClass == 'MAGE' ) then
+			powerType = SPELL_POWER_ARCANE_CHARGES
+		elseif ( playerClass == 'PALADIN' ) then
+			powerType = SPELL_POWER_HOLY_POWER
+		elseif ( playerClass == 'WARLOCK' ) then
+			powerType = SPELL_POWER_SOUL_SHARDS
+		end
+			
+		local currentPower = UnitPower("player", powerType)
+		local maxPower = UnitPowerMax("player", powerType)
 
-		if (i > comboPoints or UnitIsDeadOrGhost('target')) then
+		if ( UnitIsDeadOrGhost('target') ) then
 			return 1, 1, 1
+		elseif ( currentPower == maxPower-1 ) then
+			return 0.9, 0.7, 0.0
+		elseif ( currentPower == maxPower ) then
+			return 1, 0, 0
 		else
-			return ComboColor[i].r, ComboColor[i].g, ComboColor[i].b
-		end
-	end
-
-	local function SetComboAlpha(i)
-		local comboPoints = GetComboPoints('player', 'target') or 0
-
-		if (i == comboPoints) then
-			return 1
-		else
-			return 0
-		end
-	end
-
-	local function UpdateChi()
-		local chi = UnitPower('player', SPELL_POWER_CHI)
-		local maxChi = UnitPowerMax('player', SPELL_POWER_CHI)
-		local yOffset = PowerDB.energy.comboPointsBelow and -35 or 0
-
-		if (MPFrame.Chi.maxChi ~= maxChi) then
-			MPFrame.Chi.maxChi = maxChi
-
-			local startX = -39
-			if (maxChi == 6) then
-				startX = -65
-				MPFrame.Chi[5]:Show()
-				MPFrame.Chi[6]:Show()
-			elseif (maxChi == 5) then
-				startX = -52
-				MPFrame.Chi[5]:Show()
-				MPFrame.Chi[6]:Hide()
-			else
-				MPFrame.Chi[5]:Hide()
-				MPFrame.Chi[6]:Hide()
-			end
-
-			for i = 1, 6 do
-				MPFrame.Chi[i]:SetPoint('CENTER', startX + (i - 1) * 26, yOffset)
-			end
-		end
-
-		for i = 1, maxChi do
-			if (UnitHasVehicleUI('player')) then
-				if (MPFrame.Chi[i]:IsShown()) then
-					MPFrame.Chi[i]:Hide()
-				end
-			else
-				if (not MPFrame.Chi[i]:IsShown()) then
-					MPFrame.Chi[i]:Show()
-				end
-			end
-			MPFrame.Chi[i]:SetAlpha(i == chi and 1 or 0)
+			return 1, 1, 1
 		end
 	end
 
@@ -832,69 +751,72 @@ if cPowerBar == true then
 		end
 	end
 
-	local function SetRuneColor(i)
-		if (MPFrame.Rune[i].type == 4) then
-			return 1, 0, 1
-		else
-			return RuneColor[i].r, RuneColor[i].g, RuneColor[i].b
-		end
-	end
-
 	local function UpdateBarVisibility()
 		local _, powerType = UnitPowerType('player')
 		local newAlpha = nil
 
-		if ((not PowerDB.energy.show and powerType == 'ENERGY') or (not PowerDB.showFocus and powerType == 'FOCUS') or (not PowerDB.showRage and powerType == 'RAGE') or (not PowerDB.showMana and powerType == 'MANA') or (not PowerDB.showInsanity and powerType == 'INSANITY') or (not PowerDB.rune.show and powerType == 'RUNEPOWER') or UnitIsDeadOrGhost('player') or UnitHasVehicleUI('player')) then
-			MPFrame.Power:SetAlpha(0)
+		if ((not PowerDB.energy.show and powerType == 'ENERGY')
+			or (not PowerDB.focus.show and powerType == 'FOCUS')
+			or (not PowerDB.rage.show and powerType == 'RAGE')
+			or (not PowerDB.mana.show and powerType == 'MANA')
+			or (not PowerDB.rune.show and powerType == 'RUNEPOWER')
+			or (not PowerDB.fury.show and powerType == 'FURY')
+			or (not PowerDB.pain.show and powerType == 'PAIN')
+			or (not PowerDB.lunarPower.show and powerType == 'LUNAR_POWER')
+			or (not PowerDB.insanity.show and powerType == 'INSANITY')
+			or (not PowerDB.maelstrom.show and powerType == 'MAELSTROM')
+			or UnitIsDeadOrGhost('player') or UnitHasVehicleUI('player')) then
+			PBFrame.Power:SetAlpha(0)
 		elseif (InCombatLockdown()) then
-			--securecall('UIFrameFadeIn', MPFrame.Power, 0.3, MPFrame.Power:GetAlpha(), PowerDB.activeAlpha)
 			newAlpha = PowerDB.activeAlpha
 		elseif (not InCombatLockdown() and UnitPower('player') > 0) then
-			--securecall('UIFrameFadeOut', MPFrame.Power, 0.3, MPFrame.Power:GetAlpha(), PowerDB.inactiveAlpha)
 			newAlpha = PowerDB.inactiveAlpha
 		else
-			--securecall('UIFrameFadeOut', MPFrame.Power, 0.3, MPFrame.Power:GetAlpha(), PowerDB.emptyAlpha)
 			newAlpha = PowerDB.emptyAlpha
 		end
 
 		if (newAlpha) then
-			PowerFade(MPFrame.Power, 0.3, MPFrame.Power:GetAlpha(), newAlpha)
+			PowerFade(PBFrame.Power, 0.3, PBFrame.Power:GetAlpha(), newAlpha)
 		end
 	end
 
 	local function UpdateArrow()
 		if (UnitPower('player') == 0) then
-			MPFrame.Power.Below:SetAlpha(0.3)
-			MPFrame.Power.Above:SetAlpha(0.3)
+			PBFrame.Power.Below:SetAlpha(0.3)
+			PBFrame.Power.Above:SetAlpha(0.3)
 		else
-			MPFrame.Power.Below:SetAlpha(1)
-			MPFrame.Power.Above:SetAlpha(1)
+			PBFrame.Power.Below:SetAlpha(1)
+			PBFrame.Power.Above:SetAlpha(1)
 		end
 
-		local newPosition = UnitPower('player') / UnitPowerMax('player') * MPFrame.Power:GetWidth()
-		MPFrame.Power.Below:SetPoint('TOP', MPFrame.Power, 'BOTTOMLEFT', newPosition, 0)
+		local newPosition = UnitPower('player') / UnitPowerMax('player') * PBFrame.Power:GetWidth()
+		PBFrame.Power.Below:SetPoint('TOP', PBFrame.Power, 'BOTTOMLEFT', newPosition, 0)
 	end
 
 	local function UpdateBarValue()
 		local min = UnitPower('player')
-		MPFrame.Power:SetMinMaxValues(0, UnitPowerMax('player', MPFrame))
-		MPFrame.Power:SetValue(min)
+		PBFrame.Power:SetMinMaxValues(0, UnitPowerMax('player', f))
+		PBFrame.Power:SetValue(min)
 
 		if (PowerDB.valueAbbrev) then
-			MPFrame.Power.Value:SetText(min > 0 and FormatValue(min) or '')
+			PBFrame.Power.Value:SetText(min > 0 and FormatValue(min) or '')
 		else
-			MPFrame.Power.Value:SetText(min > 0 and min or '')
+			PBFrame.Power.Value:SetText(min > 0 and min or '')
 		end
 	end
 
 	local function UpdateBarColor()
-		local _, powerType, altR, altG, altB = UnitPowerType('player')
-		local unitPower = PowerBarColor[powerType]
+		local powerType, powerToken, altR, altG, altB = UnitPowerType('player')
+		local unitPower = PowerBarColor[powerToken]
 
 		if (unitPower) then
-			MPFrame.Power:SetStatusBarColor(unitPower.r, unitPower.g, unitPower.b)
+			if ( powerType == 0 ) then
+				PBFrame.Power:SetStatusBarColor(0,0.55,1)
+			else
+				PBFrame.Power:SetStatusBarColor(unitPower.r, unitPower.g, unitPower.b)
+			end
 		else
-			MPFrame.Power:SetStatusBarColor(altR, altG, altB)
+			PBFrame.Power:SetStatusBarColor(altR, altG, altB)
 		end
 	end
 
@@ -904,24 +826,11 @@ if cPowerBar == true then
 		UpdateArrow()
 	end
 
-	MPFrame:SetScript('OnEvent', function(self, event, arg1)
-		if (MPFrame.ComboPoints) then
-			if (event == 'UNIT_COMBO_POINTS' or event == 'PLAYER_TARGET_CHANGED') then
-				for i = 1, 5 do
-					MPFrame.ComboPoints[i]:SetTextColor(SetComboColor(i))
-					MPFrame.ComboPoints[i]:SetAlpha(SetComboAlpha(i))
-				end
-			end
-		end
-
-		if (event == 'RUNE_TYPE_UPDATE' and PowerDB.rune.showRuneCooldown) then
-			MPFrame.Rune[arg1].type = GetRuneType(arg1)
-		end
-
-		if (MPFrame.extraPoints) then
+	PBFrame:SetScript('OnEvent', function(self, event, arg1)
+		if (PBFrame.extraPoints) then
 			if (UnitHasVehicleUI('player')) then
-				if (MPFrame.extraPoints:IsShown()) then
-					MPFrame.extraPoints:Hide()
+				if (PBFrame.extraPoints:IsShown()) then
+					PBFrame.extraPoints:Hide()
 				end
 			else
 				local nump
@@ -929,24 +838,25 @@ if cPowerBar == true then
 					nump = UnitPower('player', SPELL_POWER_SOUL_SHARDS)
 				elseif (playerClass == 'PALADIN') then
 					nump = UnitPower('player', SPELL_POWER_HOLY_POWER)
-				elseif (playerClass == 'PRIEST') then
-					nump = UnitPower('player', SPELL_POWER_SHADOW_ORBS)
+				elseif (playerClass == 'ROGUE' or playerClass == 'DRUID' ) then
+					nump = UnitPower('player', SPELL_POWER_COMBO_POINTS)
+				elseif (playerClass == 'MONK' ) then
+					nump = UnitPower('player', SPELL_POWER_CHI)
+				elseif (playerClass == 'MAGE' ) then
+					nump = UnitPower('player', SPELL_POWER_ARCANE_CHARGES)
 				end
 
-				MPFrame.extraPoints:SetText(nump == 0 and '' or nump)
-				
-				if (not MPFrame.extraPoints:IsShown()) then
-					MPFrame.extraPoints:Show()
-				end			
+				PBFrame.extraPoints:SetTextColor(SetPowerColor())
+				PBFrame.extraPoints:SetText(nump == 0 and '' or nump)
+
+				if (not PBFrame.extraPoints:IsShown()) then
+					PBFrame.extraPoints:Show()
+				end
 			end
 		end
 
-		if (MPFrame.Chi) then
-			UpdateChi()
-		end
-
-		if (MPFrame.mpreg and (event == 'UNIT_AURA' or event == 'PLAYER_ENTERING_WORLD')) then
-			MPFrame.mpreg:SetText(GetRealMpFive())
+		if (PBFrame.mpreg and (event == 'UNIT_AURA' or event == 'PLAYER_ENTERING_WORLD')) then
+			PBFrame.mpreg:SetText(GetRealMpFive())
 		end
 
 		UpdateBar()
@@ -954,40 +864,40 @@ if cPowerBar == true then
 
 		if (event == 'PLAYER_ENTERING_WORLD') then
 			if (InCombatLockdown()) then
-				securecall('UIFrameFadeIn', MPFrame, 0.35, MPFrame:GetAlpha(), 1)
+				securecall('UIFrameFadeIn', PBFrame, 0.35, PBFrame:GetAlpha(), 1)
 			else
-				securecall('UIFrameFadeOut', MPFrame, 0.35, MPFrame:GetAlpha(), PowerDB.inactiveAlpha)
+				securecall('UIFrameFadeOut', PBFrame, 0.35, PBFrame:GetAlpha(), PowerDB.inactiveAlpha)
 			end
 		end
 
 		if (event == 'PLAYER_REGEN_DISABLED') then
-			securecall('UIFrameFadeIn', MPFrame, 0.35, MPFrame:GetAlpha(), 1)
+			securecall('UIFrameFadeIn', PBFrame, 0.35, PBFrame:GetAlpha(), 1)
 		end
 
 		if (event == 'PLAYER_REGEN_ENABLED') then
-			securecall('UIFrameFadeOut', MPFrame, 0.35, MPFrame:GetAlpha(), PowerDB.inactiveAlpha)
+			securecall('UIFrameFadeOut', PBFrame, 0.35, PBFrame:GetAlpha(), PowerDB.inactiveAlpha)
 		end
 	end)
 
-	if (MPFrame.Rune) then
+	if (PBFrame.Rune) then
 		local updateTimer = 0
-		MPFrame:SetScript('OnUpdate', function(self, elapsed)
+		PBFrame:SetScript('OnUpdate', function(self, elapsed)
 			updateTimer = updateTimer + elapsed
 
 			if (updateTimer > 0.1) then
 				for i = 1, 6 do
 					if (UnitHasVehicleUI('player')) then
-						if (MPFrame.Rune[i]:IsShown()) then
-							MPFrame.Rune[i]:Hide()
+						if (PBFrame.Rune[i]:IsShown()) then
+							PBFrame.Rune[i]:Hide()
 						end
 					else
-						if (not MPFrame.Rune[i]:IsShown()) then
-							MPFrame.Rune[i]:Show()
+						if (not PBFrame.Rune[i]:IsShown()) then
+							PBFrame.Rune[i]:Show()
 						end
 					end
 
-					MPFrame.Rune[i]:SetText(CalcRuneCooldown(i))
-					MPFrame.Rune[i]:SetTextColor(SetRuneColor(i))
+					PBFrame.Rune[i]:SetText(CalcRuneCooldown(i))
+					PBFrame.Rune[i]:SetTextColor(0.0, 0.6, 0.8)
 				end
 
 				updateTimer = 0
@@ -1003,9 +913,9 @@ if cRareAlert == true then
 		[976] = true, -- Horde garrison
 	}
 
-	local f = CreateFrame("Frame")
-	f:RegisterEvent("VIGNETTE_ADDED")
-	f:SetScript("OnEvent", function()
+	local RareFrame = CreateFrame("Frame")
+	RareFrame:RegisterEvent("VIGNETTE_ADDED")
+	RareFrame:SetScript("OnEvent", function()
 		if blacklist[GetCurrentMapAreaID()] then return end
 
 		PlaySoundFile("Sound\\Spells\\PVPFlagTaken.ogg")
@@ -1015,24 +925,24 @@ end
 
 -- Coords from NeavUI
 if cCoords == true then
-	local f = CreateFrame('Frame', nil, WorldMapFrame)
-	f:SetParent(WorldMapButton)
+	local CoordsFrame = CreateFrame('Frame', nil, WorldMapFrame)
+	CoordsFrame:SetParent(WorldMapButton)
 
-	f.Player = f:CreateFontString(nil, 'OVERLAY')
-	f.Player:SetFont('Fonts\\ARIALN.ttf', 26)
-	f.Player:SetShadowOffset(1, -1)
-	f.Player:SetJustifyH('LEFT')
-	f.Player:SetPoint('BOTTOMLEFT', WorldMapButton, 7, 4)
-	f.Player:SetTextColor(1, 0.82, 0)
+	CoordsFrame.Player = CoordsFrame:CreateFontString(nil, 'OVERLAY')
+	CoordsFrame.Player:SetFont('Fonts\\ARIALN.ttf', 26)
+	CoordsFrame.Player:SetShadowOffset(1, -1)
+	CoordsFrame.Player:SetJustifyH('LEFT')
+	CoordsFrame.Player:SetPoint('BOTTOMLEFT', WorldMapButton, 7, 4)
+	CoordsFrame.Player:SetTextColor(1, 0.82, 0)
 
-	f.Cursor = f:CreateFontString(nil, 'OVERLAY')
-	f.Cursor:SetFont('Fonts\\ARIALN.ttf', 26)
-	f.Cursor:SetShadowOffset(1, -1)
-	f.Cursor:SetJustifyH('LEFT')
-	f.Cursor:SetPoint('BOTTOMLEFT', f.Player, 'TOPLEFT')
-	f.Cursor:SetTextColor(1, 0.82, 0)
+	CoordsFrame.Cursor = CoordsFrame:CreateFontString(nil, 'OVERLAY')
+	CoordsFrame.Cursor:SetFont('Fonts\\ARIALN.ttf', 26)
+	CoordsFrame.Cursor:SetShadowOffset(1, -1)
+	CoordsFrame.Cursor:SetJustifyH('LEFT')
+	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', CoordsFrame.Player, 'TOPLEFT')
+	CoordsFrame.Cursor:SetTextColor(1, 0.82, 0)
 
-	f:SetScript('OnUpdate', function(self, elapsed)
+	CoordsFrame:SetScript('OnUpdate', function(self, elapsed)
 		local width = WorldMapDetailFrame:GetWidth()
 		local height = WorldMapDetailFrame:GetHeight()
 		local mx, my = WorldMapDetailFrame:GetCenter()
@@ -1043,15 +953,15 @@ if cCoords == true then
 		my = ((my + height / 2) - (cy / WorldMapDetailFrame:GetEffectiveScale())) / height
 
 		if (mx >= 0 and my >= 0 and mx <= 1 and my <= 1) then
-			f.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
+			CoordsFrame.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
 		else
-			f.Cursor:SetText('')
+			CoordsFrame.Cursor:SetText('')
 		end
 
 		if (px ~= 0 and py ~= 0) then
-			f.Player:SetText(PLAYER..format(': %.0f x %.0f', px * 100, py * 100))
+			CoordsFrame.Player:SetText(PLAYER..format(': %.0f x %.0f', px * 100, py * 100))
 		else
-			f.Player:SetText('')
+			CoordsFrame.Player:SetText('')
 		end
 	end)
 end
