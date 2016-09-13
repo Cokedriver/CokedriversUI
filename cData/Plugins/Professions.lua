@@ -55,12 +55,12 @@ cData.pluginConstructors["pro"] = function()
 		local prof1, prof2 = GetProfessions()
 		if btn == "LeftButton" then
 			if prof1 then
-				if (GetProfessionInfo(prof1) == ('Herbalism')) then
-					print('|cff33ff99cData:|r |cffFF0000Herbalism has no options!|r')
-				elseif(GetProfessionInfo(prof1) == ('Skinning')) then
-					print('|cff33ff99cData:|r |cffFF0000Skinning has no options!|r')
+				if(GetProfessionInfo(prof1) == ('Skinning')) then
+					CastSpellByName("Skinning Skills")
 				elseif(GetProfessionInfo(prof1) == ('Mining')) then
 					CastSpellByName("Mining Skills")
+				elseif(GetProfessionInfo(prof1) == ('Herbalism')) then
+					CastSpellByName("Herbalism Skills")					
 				else	
 					CastSpellByName((GetProfessionInfo(prof1)))
 				end
@@ -71,12 +71,12 @@ cData.pluginConstructors["pro"] = function()
 			ToggleSpellBook(BOOKTYPE_PROFESSION)	
 		elseif btn == "RightButton" then
 			if prof2 then
-				if (GetProfessionInfo(prof2) == ('Herbalism')) then
-					print('|cff33ff99cData:|r |cffFF0000Herbalism has no options!|r')
-				elseif(GetProfessionInfo(prof2) == ('Skinning')) then
-					print('|cff33ff99cData:|r |cffFF0000Skinning has no options!|r')
+				if(GetProfessionInfo(prof2) == ('Skinning')) then
+					CastSpellByName("Skinning Skills")
 				elseif(GetProfessionInfo(prof2) == ('Mining')) then
 					CastSpellByName("Mining Skills")
+				elseif(GetProfessionInfo(prof2) == ('Herbalism')) then
+					CastSpellByName("Herbalism Skills")						
 				else
 					CastSpellByName((GetProfessionInfo(prof2)))
 				end

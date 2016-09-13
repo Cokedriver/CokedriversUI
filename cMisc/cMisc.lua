@@ -1,76 +1,71 @@
 
 -- Enable Seperate Parts of cMISC
-local cFlashingNods = false
-local cMerchant = true
-local cVellum = false	
-local cRareAlert = true
-local cPowerBar = true
-local cMiniMap = true
-local cAltBuy = true
-local cQuicky = false
-local cAutogreed = true
-local cChatBubble = false
-local cCoords = false
-local cAuction = true
+db = {
+	cMerchant = true,
+	cRareAlert = true,
+	cPowerBar = true,
+	cMiniMap = true,
+	cAltBuy = true,
+	cAutogreed = true,
+	cChatBubble = false,
+	cAuction = true,
+	cSpellID = true,
+}
 
--- Flashing Gather Nodes
-if cFlashingNods == true then
-	if not IsAddOnLoaded('Zygor Guides Viewer 5.0') and not IsAddOnLoaded('DugiGuidesViewer |cffffffff7.415|r') then 
-
-		function AssignButtonTexture(obj,tx,num,total)
-			self.ChainCall(obj):SetNormalTexture(CreateTexWithCoordsNum(obj,tx,num,total,1,4))
-				:SetPushedTexture(CreateTexWithCoordsNum(obj,tx,num,total,2,4))
-				:SetHighlightTexture(CreateTexWithCoordsNum(obj,tx,num,total,3,4))
-				:SetDisabledTexture(CreateTexWithCoordsNum(obj,tx,num,total,4,4))
+-- SpellID From NeavUI
+if db.cSpellID == true then
+	hooksecurefunc(GameTooltip, 'SetUnitBuff', function(self,...)
+		local id = select(11, UnitBuff(...))
+		if (id) then
+			self:AddLine('SpellID: '..id, 1, 1, 1)
+			self:Show()
 		end
+	end)
 
-		local nodeFrame = CreateFrame("Frame")
-		function nodeFrame.ChainCall(obj)  local T={}  setmetatable(T,{__index=function(self,fun)  if fun=="__END" then return obj end  return function(self,...) assert(obj[fun],fun.." missing in object") obj[fun](obj,...) return self end end})  return T  end
-		
-		local flash_interval=0.35
-
-		local flash=nil
-		function nodeFrame:MinimapNodeFlash(s)
-			flash=not flash
-			if flash then
-				Minimap:SetBlipTexture("Interface\\MINIMAP\\ObjectIcons")
-			else
-				Minimap:SetBlipTexture("Interface\\AddOns\\cMisc\\Media\\objecticons_off")
-			end
+	hooksecurefunc(GameTooltip, 'SetUnitDebuff', function(self,...)
+		local id = select(11, UnitDebuff(...))
+		if (id) then
+			self:AddLine('SpellID: '..id, 1, 1, 1)
+			self:Show()
 		end
-		function nodeFrame:MinimapNodeFlashOff()
-			Minimap:SetBlipTexture("INTERFACE\\MINIMAP\\OBJECTICONS")
+	end)
+
+	hooksecurefunc(GameTooltip, 'SetUnitAura', function(self,...)
+		local id = select(11, UnitAura(...))
+		if (id) then
+			self:AddLine('SpellID: '..id, 1, 1, 1)
+			self:Show()
 		end
+	end)
 
-		local q=0
+	hooksecurefunc('SetItemRef', function(link, text, button, chatFrame)
+		if (string.find(link,'^spell:')) then
+			local id = string.sub(link, 7)
+			ItemRefTooltip:AddLine('SpellID: '..id, 1, 1, 1)
+			ItemRefTooltip:Show()
+		end
+	end)
 
-		do
-			local F = CreateFrame("FRAME","PointerExtraFrame")
-			local ant_last=GetTime()
-			local flash_last=GetTime()
-			F:SetScript("OnUpdate",function(self,elapsed)
-				local t=GetTime()
-
-				-- Flashing node dots. Prettier than the standard, too. And slightly bigger.  Also, s/ode do/ude ti/.
-				if t-flash_last>=flash_interval then
-					nodeFrame:MinimapNodeFlash()
-					flash_last=t-(t-flash_last)%flash_interval
+	GameTooltip:HookScript('OnTooltipSetSpell', function(self)
+		local id = select(3, self:GetSpell())
+		if (id) then
+			-- Workaround for weird issue when this gets triggered twice on the Talents frame
+			-- https://github.com/renstrom/NeavUI/issues/76
+			for i = 1, self:NumLines() do
+				if _G['GameTooltipTextLeft'..i]:GetText() == 'SpellID: '..id then
+					return
 				end
-			end)
-			
-			F:SetPoint("CENTER",UIParent)
-			F:Show()
+			end
 
-			-- these make sure the flashing dots don't blink-glitch when their texture changes.
-			nodeFrame.ChainCall(F:CreateTexture("PointerDotOn","OVERLAY")) :SetTexture("Interface\\MINIMAP\\ObjectIcons") :SetSize(50,50) :SetPoint("RIGHT") :SetNonBlocking(true) :Show()
-			nodeFrame.ChainCall(F:CreateTexture("PointerDotOff","OVERLAY")) :SetTexture("Interface\\AddOns\\cMisc\\Media\\objecticons_off") :SetSize(50,50) :SetPoint("RIGHT") :SetNonBlocking(true) :Show()
-		end	
+			self:AddLine('SpellID: '..id, 1, 1, 1)
+			self:Show()
+		end
+	end)
 
-	end
 end
 
 -- Merchant
-if cMerchant == true then
+if db.cMerchant == true then
 	local merchantUseGuildRepair = false	-- let your guild pay for your repairs if they allow.
 
 	local MerchantFilter = {
@@ -162,7 +157,7 @@ if cMerchant == true then
 end
 
 --Minimap
-if cMiniMap == true then
+if db.cMiniMap == true then
 	MinimapCluster:SetScale(1.2) 
 
 	GarrisonLandingPageMinimapButton:SetSize(36, 36)
@@ -184,181 +179,8 @@ if cMiniMap == true then
 	end)
 end
 
--- This is Velluminous from Tekkub
--- You can find the main addon at https://github.com/TekNoLogic/Velluminous
-if cVellum == true then
-
-	if not TradeSkillFrame then
-		print("What the fuck?  Velluminous cannot initialize.  BAIL!  BAIL!  BAIL!")
-		return
-	end
-
-
-	local butt = CreateFrame("Button", nil, TradeSkillFrame.DetailsFrame.CreateButton, "SecureActionButtonTemplate")
-	butt:SetAttribute("type", "macro")
-	butt:SetAttribute("macrotext", "/click TradeSkillFrame.DetailsFrame.CreateButton()\n/use item:38682")
-
-	butt:SetText("Vellum")
-
-	butt:SetPoint("RIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "LEFT")
-
-	butt:SetWidth(80) butt:SetHeight(22)
-
-	-- Fonts --
-	butt:SetDisabledFontObject(GameFontDisable)
-	butt:SetHighlightFontObject(GameFontHighlight)
-	butt:SetNormalFontObject(GameFontNormal)
-
-	-- Textures --
-	butt:SetNormalTexture("Interface\\Buttons\\UI-Panel-Button-Up")
-	butt:SetPushedTexture("Interface\\Buttons\\UI-Panel-Button-Down")
-	butt:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
-	butt:SetDisabledTexture("Interface\\Buttons\\UI-Panel-Button-Disabled")
-	butt:GetNormalTexture():SetTexCoord(0, 0.625, 0, 0.6875)
-	butt:GetPushedTexture():SetTexCoord(0, 0.625, 0, 0.6875)
-	butt:GetHighlightTexture():SetTexCoord(0, 0.625, 0, 0.6875)
-	butt:GetDisabledTexture():SetTexCoord(0, 0.625, 0, 0.6875)
-	butt:GetHighlightTexture():SetBlendMode("ADD")
-
-	local hider = CreateFrame("Frame", nil, TradeSkillCreateAllButton)
-	hider:SetScript("OnShow", function() butt:Hide() end)
-	hider:SetScript("OnHide", function() butt:Show() end)
-end
-
-SlashCmdList['RELOADUI'] = function()
-	ReloadUI()
-end
-SLASH_RELOADUI1 = '/rl'
-
-
--- Alt-Buy Full Stack from NeavUI
-if cAltBuy == true then
-	local NEW_ITEM_VENDOR_STACK_BUY = ITEM_VENDOR_STACK_BUY
-	ITEM_VENDOR_STACK_BUY = '|cffa9ff00'..NEW_ITEM_VENDOR_STACK_BUY..'|r'
-
-		-- alt-click to buy a stack
-
-	local origMerchantItemButton_OnModifiedClick = _G.MerchantItemButton_OnModifiedClick
-	local function MerchantItemButton_OnModifiedClickHook(self, ...)
-		origMerchantItemButton_OnModifiedClick(self, ...)
-
-		if (IsAltKeyDown()) then
-			local maxStack = select(8, GetItemInfo(GetMerchantItemLink(self:GetID())))
-			local _, _, _, quantity = GetMerchantItemInfo(self:GetID())
-
-			if (maxStack and maxStack > 1) then
-				BuyMerchantItem(self:GetID(), floor(maxStack / quantity))
-			end
-		end
-	end
-	MerchantItemButton_OnModifiedClick = MerchantItemButton_OnModifiedClickHook
-
-		-- Google translate ftw...NOT
-
-	local function GetAltClickString()
-		if (GetLocale() == 'enUS') then
-			return '<Alt-click, to buy an stack>'
-		elseif (GetLocale() == 'frFR') then
-			return '<Alt-clic, d acheter une pile>'
-		elseif (GetLocale() == 'esES') then
-			return '<Alt-clic, para comprar una pila>'
-		elseif (GetLocale() == 'deDE') then
-			return '<Alt-klicken, um einen ganzen Stapel zu kaufen>'
-		else
-			return '<Alt-click, to buy an stack>'
-		end
-	end
-
-		-- add a hint to the tooltip
-
-	local function IsMerchantButtonOver()
-		return GetMouseFocus():GetName() and GetMouseFocus():GetName():find('MerchantItem%d')
-	end
-
-	GameTooltip:HookScript('OnTooltipSetItem', function(self)
-		if (MerchantFrame:IsShown() and IsMerchantButtonOver()) then 
-			for i = 2, GameTooltip:NumLines() do
-				if (_G['GameTooltipTextLeft'..i]:GetText():find('<[sS]hift')) then
-					GameTooltip:AddLine('|cff00ffcc'..GetAltClickString()..'|r')
-				end
-			end
-		end
-	end)
-end
-
--- Quicky From Neav UI
-if cQuicky == true then
-	local QuickyFrame = CreateFrame('Frame')
-
-	QuickyFrame.Head = CreateFrame('Button', nil, CharacterHeadSlot)
-	QuickyFrame.Head:SetFrameStrata('HIGH')
-	QuickyFrame.Head:SetSize(16, 32)
-	QuickyFrame.Head:SetPoint('LEFT', CharacterHeadSlot, 'CENTER', 9, 0)
-
-	QuickyFrame.Head:SetScript('OnClick', function() 
-		ShowHelm(not ShowingHelm()) 
-	end)
-
-	QuickyFrame.Head:SetScript('OnEnter', function(self) 
-		GameTooltip:SetOwner(self, 'ANCHOR_TOPLEFT', 13, -10)
-		GameTooltip:AddLine(SHOW_HELM)
-		GameTooltip:Show()
-	end)
-
-	QuickyFrame.Head:SetScript('OnLeave', function() 
-		GameTooltip:Hide()
-	end)
-
-	QuickyFrame.Head:SetNormalTexture('Interface\\AddOns\\cMisc\\Media\\textureNormal')
-	QuickyFrame.Head:SetHighlightTexture('Interface\\AddOns\\cMisc\\Media\\textureHighlight')
-	QuickyFrame.Head:SetPushedTexture('Interface\\AddOns\\cMisc\\Media\\texturePushed')
-
-	CharacterHeadSlotPopoutButton:SetScript('OnShow', function()
-		QuickyFrame.Head:ClearAllPoints()
-		QuickyFrame.Head:SetPoint('RIGHT', CharacterHeadSlot, 'CENTER', -9, 0)
-	end)
-
-	CharacterHeadSlotPopoutButton:SetScript('OnHide', function()
-		QuickyFrame.Head:ClearAllPoints()
-		QuickyFrame.Head:SetPoint('LEFT', CharacterHeadSlot, 'CENTER', 9, 0)
-	end)
-
-	QuickyFrame.Cloak = CreateFrame('Button', nil, CharacterBackSlot)
-	QuickyFrame.Cloak:SetFrameStrata('HIGH')
-	QuickyFrame.Cloak:SetSize(16, 32)
-	QuickyFrame.Cloak:SetPoint('LEFT', CharacterBackSlot, 'CENTER', 9, 0)
-
-	QuickyFrame.Cloak:SetScript('OnClick', function() 
-		ShowCloak(not ShowingCloak()) 
-	end)
-
-	QuickyFrame.Cloak:SetScript('OnEnter', function(self) 
-		GameTooltip:SetOwner(self, 'ANCHOR_TOPLEFT', 13, -10)
-		GameTooltip:AddLine(SHOW_CLOAK)
-		GameTooltip:Show()
-	end)
-
-	QuickyFrame.Cloak:SetScript('OnLeave', function() 
-		GameTooltip:Hide()
-	end)
-
-	QuickyFrame.Cloak:SetNormalTexture('Interface\\AddOns\\cMisc\\Media\\textureNormal')
-	QuickyFrame.Cloak:SetHighlightTexture('Interface\\AddOns\\cMisc\\Media\\textureHighlight')
-	QuickyFrame.Cloak:SetPushedTexture('Interface\\AddOns\\cMisc\\Media\\texturePushed')
-
-	CharacterBackSlotPopoutButton:SetScript('OnShow', function()
-		QuickyFrame.Cloak:ClearAllPoints()
-		QuickyFrame.Cloak:SetPoint('RIGHT', CharacterBackSlot, 'CENTER', -9, 0)
-	end)
-
-	CharacterBackSlotPopoutButton:SetScript('OnHide', function()
-		QuickyFrame.Cloak:ClearAllPoints()
-		QuickyFrame.Cloak:SetPoint('LEFT', CharacterBackSlot, 'CENTER', 9, 0)
-	end)
-end
-
 -- Autogreed from NeavUI
-if cAutogreed == true then
+if db.cAutogreed == true then
 
 	-- A skip list for green stuff you might not wanna auto-greed on
 	local skipList = {
@@ -377,7 +199,7 @@ if cAutogreed == true then
 end
 
 --ChatBubble Frame from NeavUI
-if cChatBubble == true then
+if db.cChatBubble == true then
 	local events = {
 		CHAT_MSG_SAY = 'chatBubbles', 
 		CHAT_MSG_YELL = 'chatBubbles',
@@ -480,9 +302,9 @@ if cChatBubble == true then
 end
 
 -- Powerbar From NeavUI
-if cPowerBar == true then
+if db.cPowerBar == true then
 	local PowerDB = {
-		position = {'CENTER', UIParent, 0, -150},
+		position = {'CENTER', UIParent, 0, -110},
 		sizeWidth = 200,		
 		scale = 1.0,
 
@@ -628,7 +450,10 @@ if cPowerBar == true then
 	end
 
 	if (playerClass == 'DEATHKNIGHT' and PowerDB.showRunes) then
-
+		for i = 1, 7 do
+			RuneFrame:UnregisterAllEvents()
+			_G['RuneButtonIndividual'..i]:Hide()
+		end
 		PBFrame.Rune = {}
 
 		for i = 1, 6 do
@@ -646,12 +471,12 @@ if cPowerBar == true then
 			PBFrame.Rune[i]:SetParent(PBFrame)
 		end
 
-		PBFrame.Rune[1]:SetPoint('CENTER', -42, 2)
-		PBFrame.Rune[2]:SetPoint('CENTER', -26, 2)
-		PBFrame.Rune[3]:SetPoint('CENTER', -8, 2)
-		PBFrame.Rune[4]:SetPoint('CENTER', 8, 2)
-		PBFrame.Rune[5]:SetPoint('CENTER', 26, 2)
-		PBFrame.Rune[6]:SetPoint('CENTER', 42, 2)
+		PBFrame.Rune[1]:SetPoint('CENTER', -65, 0)
+		PBFrame.Rune[2]:SetPoint('CENTER', -39, 0)
+		PBFrame.Rune[3]:SetPoint('CENTER', 39, 0)
+		PBFrame.Rune[4]:SetPoint('CENTER', 65, 0)
+		PBFrame.Rune[5]:SetPoint('CENTER', -13, 0)
+		PBFrame.Rune[6]:SetPoint('CENTER', 13, 0)
 	end
 
 	PBFrame.Power = CreateFrame('StatusBar', nil, UIParent)
@@ -907,7 +732,7 @@ if cPowerBar == true then
 end
 
 -- Rare Alert
-if cRareAlert == true then
+if db.cRareAlert == true then
 	local blacklist = {
 		[971] = true, -- Alliance garrison
 		[976] = true, -- Horde garrison
@@ -923,52 +748,9 @@ if cRareAlert == true then
 	end)
 end
 
--- Coords from NeavUI
-if cCoords == true then
-	local CoordsFrame = CreateFrame('Frame', nil, WorldMapFrame)
-	CoordsFrame:SetParent(WorldMapButton)
-
-	CoordsFrame.Player = CoordsFrame:CreateFontString(nil, 'OVERLAY')
-	CoordsFrame.Player:SetFont('Fonts\\ARIALN.ttf', 26)
-	CoordsFrame.Player:SetShadowOffset(1, -1)
-	CoordsFrame.Player:SetJustifyH('LEFT')
-	CoordsFrame.Player:SetPoint('BOTTOMLEFT', WorldMapButton, 7, 4)
-	CoordsFrame.Player:SetTextColor(1, 0.82, 0)
-
-	CoordsFrame.Cursor = CoordsFrame:CreateFontString(nil, 'OVERLAY')
-	CoordsFrame.Cursor:SetFont('Fonts\\ARIALN.ttf', 26)
-	CoordsFrame.Cursor:SetShadowOffset(1, -1)
-	CoordsFrame.Cursor:SetJustifyH('LEFT')
-	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', CoordsFrame.Player, 'TOPLEFT')
-	CoordsFrame.Cursor:SetTextColor(1, 0.82, 0)
-
-	CoordsFrame:SetScript('OnUpdate', function(self, elapsed)
-		local width = WorldMapDetailFrame:GetWidth()
-		local height = WorldMapDetailFrame:GetHeight()
-		local mx, my = WorldMapDetailFrame:GetCenter()
-		local px, py = GetPlayerMapPosition('player')
-		local cx, cy = GetCursorPosition()
-
-		mx = ((cx / WorldMapDetailFrame:GetEffectiveScale()) - (mx - width / 2)) / width
-		my = ((my + height / 2) - (cy / WorldMapDetailFrame:GetEffectiveScale())) / height
-
-		if (mx >= 0 and my >= 0 and mx <= 1 and my <= 1) then
-			CoordsFrame.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
-		else
-			CoordsFrame.Cursor:SetText('')
-		end
-
-		if (px ~= 0 and py ~= 0) then
-			CoordsFrame.Player:SetText(PLAYER..format(': %.0f x %.0f', px * 100, py * 100))
-		else
-			CoordsFrame.Player:SetText('')
-		end
-	end)
-end
-
 
 -- From daftAuction by Daftwise - US Destromath
-if cAuction == true then
+if db.cAuction == true then
 	local undercutPercent = .97
 
 	local duration = 3 -- 1, 2, 3 for 12h, 24h, 48h
