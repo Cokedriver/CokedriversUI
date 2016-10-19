@@ -219,12 +219,12 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		
 		--[[ Boss Frames Scaling ]]--
 		----------------------------------------------------------
-		--for i = 1, MAX_BOSS_FRAMES do
-			--_G["Boss"..i.."TargetFrame"]:SetScale(UnitScale)
-		--end
+		for i = 1, MAX_BOSS_FRAMES do
+			_G["Boss"..i.."TargetFrame"]:SetScale(UnitScale)
+		end
 		----------------------------------------------------------
 		
-		--self:UnregisterEvent("ADDON_LOADED")
+		self:UnregisterEvent("ADDON_LOADED")
 	end
 
 	-- Nameplates Percentage

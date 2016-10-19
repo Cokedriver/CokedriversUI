@@ -1,7 +1,7 @@
 ## Interface: 70000
 ## Title: cData
 ## Notes: Cokedriver's Data Panel Addon
-## Version: 7.0.0
+## Version: 7.0.3
 ## Author: Cokedriver
 ## SavedVariables: cDataDB
 ## SavedVariablesPerCharacter: cDataDBPerChar

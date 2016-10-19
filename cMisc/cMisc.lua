@@ -10,8 +10,50 @@ db = {
 	cChatBubble = false,
 	cAuction = true,
 	cSpellID = true,
+	cCoords = true,
 }
 
+
+-- Coords From NeavUI
+if db.cCoords == true then
+	local CoordsFrame = CreateFrame('Frame', nil, WorldMapFrame)
+	CoordsFrame:SetParent(WorldMapFrame.BorderFrame)
+
+	CoordsFrame.Player = CoordsFrame:CreateFontString(nil, 'OVERLAY')
+	CoordsFrame.Player:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
+	CoordsFrame.Player:SetJustifyH('LEFT')
+	CoordsFrame.Player:SetPoint('BOTTOMLEFT', WorldMapFrame.BorderFrame, "BOTTOMLEFT", 10, 8)
+	CoordsFrame.Player:SetTextColor(1, 0.82, 0)
+
+	CoordsFrame.Cursor = CoordsFrame:CreateFontString(nil, 'OVERLAY')
+	CoordsFrame.Cursor:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
+	CoordsFrame.Cursor:SetJustifyH('LEFT')
+	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', WorldMapFrame.BorderFrame, "BOTTOMLEFT", 175, 8)
+	CoordsFrame.Cursor:SetTextColor(1, 0.82, 0)
+
+	CoordsFrame:SetScript('OnUpdate', function(self, elapsed)
+		local width = WorldMapDetailFrame:GetWidth()
+		local height = WorldMapDetailFrame:GetHeight()
+		local mx, my = WorldMapDetailFrame:GetCenter()
+		local px, py = GetPlayerMapPosition('player')
+		local cx, cy = GetCursorPosition()
+
+		mx = ((cx / WorldMapDetailFrame:GetEffectiveScale()) - (mx - width / 2)) / width
+		my = ((my + height / 2) - (cy / WorldMapDetailFrame:GetEffectiveScale())) / height
+
+		if (mx >= 0 and my >= 0 and mx <= 1 and my <= 1) then
+			CoordsFrame.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
+		else
+			CoordsFrame.Cursor:SetText('')
+		end
+
+		if (px ~= 0 and py ~= 0) then
+			CoordsFrame.Player:SetText("Coords - "..PLAYER..format(': %.0f x %.0f', px * 100, py * 100))
+		else
+			CoordsFrame.Player:SetText('')
+		end
+	end)
+end
 -- SpellID From NeavUI
 if db.cSpellID == true then
 	hooksecurefunc(GameTooltip, 'SetUnitBuff', function(self,...)
@@ -158,23 +200,38 @@ end
 
 --Minimap
 if db.cMiniMap == true then
-	MinimapCluster:SetScale(1.2) 
 
+    -- Bigger Minimap
+	MinimapCluster:SetScale(1.2) 
+	MinimapCluster:EnableMouse(false)
+	
+	-- Garrison Button
 	GarrisonLandingPageMinimapButton:SetSize(36, 36)
-	 
+
+    -- Hide all Unwanted Things	
 	MinimapZoomIn:Hide()
 	MinimapZoomOut:Hide()
-	Minimap:SetScript('OnMouseWheel', function(self, direction)
-		self:SetZoom(self:GetZoom() + (self:GetZoom() == 0 and direction < 0 and 0 or direction))
-	end)
-	 
-	 
+	 	 
 	MiniMapTracking:UnregisterAllEvents()
 	MiniMapTracking:Hide()
 
-	MinimapZoneTextButton:SetScript('OnMouseDown', function(self, button)
-		if (button == 'LeftButton') then
+	
+	-- Enable Mousewheel Zooming
+	Minimap:EnableMouseWheel(true)
+	Minimap:SetScript('OnMouseWheel', function(self, delta)
+		if (delta > 0) then
+			_G.MinimapZoomIn:Click()
+		elseif delta < 0 then
+			_G.MinimapZoomOut:Click()
+		end
+	end)
+
+	-- Modify the Minimap Tracking		
+	Minimap:SetScript('OnMouseUp', function(self, button)
+		if (button == 'RightButton') then
 			ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, self, - (Minimap:GetWidth() * 0.7), -3)
+		else
+			Minimap_OnClick(self)
 		end
 	end)
 end
