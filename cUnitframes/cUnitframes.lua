@@ -380,5 +380,4 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		end
 	end
 	hooksecurefunc('CompactUnitFrame_UpdateName', UpdateName)
-
 end)

@@ -108,9 +108,14 @@ ChatFrame1EditBox:SetBackdropColor(0, 0, 0, 0.5)
 
 	-- Hide the menu and friend button
 
-FriendsMicroButton:SetAlpha(0)
-FriendsMicroButton:EnableMouse(false)
-FriendsMicroButton:UnregisterAllEvents()
+QuickJoinToastButton:SetAlpha(0)
+QuickJoinToastButton:EnableMouse(false)
+QuickJoinToastButton:UnregisterAllEvents()
+
+BNToastFrame:HookScript('OnShow', function(self)
+    BNToastFrame:ClearAllPoints()
+    BNToastFrame:SetPoint('BOTTOMLEFT', ChatFrame1EditBox, 'TOPLEFT', 0, 15)
+end)
 
 ChatFrameMenuButton:SetAlpha(0)
 ChatFrameMenuButton:EnableMouse(false)
@@ -135,46 +140,72 @@ hooksecurefunc('ChatEdit_UpdateHeader', function(editBox)
 	ChatFrame1EditBox:SetBackdropBorderColor(info.r, info.g, info.b)
 end)
 
---[[local HyperFrame = CreateFrame('Frame')
+
+
+ -- Hyperlink Tooltip
+local _G = getfenv(0)
+local orig1, orig2 = {}, {}
+local GameTooltip = GameTooltip
 
 local linktypes = {
-	-- These use GameTooltip:
-	achievement    = true,
-	enchant        = true,
-	glyph          = true,
-	item           = true,
-	instancelock   = true,
-	quest          = true,
-	spell          = true,
-	talent         = true,
-	unit           = true,
-	currency	   = true,
-	-- This uses FloatingBattlePetTooltip:
-	battlepet      = true,
-	-- This uses FloatingPetBattleAbilityTooltip:
-	battlePetAbil = true,
-	-- This uses FloatingGarrisonFollowerTooltip:
-	garrfollower  = true,
-	-- This uses FloatingGarrisonFollowerAbilityTooltip:
+	-- Normal tooltip things:
+	achievement  = true,
+	enchant      = true,
+	glyph        = true,
+	item         = true,
+	instancelock = true,
+	quest        = true,
+	spell        = true,
+	talent       = true,
+	unit         = true,
+	currency     = true,
+	-- Special tooltip things:
+	battlepet           = true,
+	battlePetAbil       = true,
 	garrfollowerability = true,
-	-- This uses FloatingGarrisonMissionTooltip:
-	garrmission   = true,
+	garrfollower        = true,
+	garrmission         = true,
 }
 
-local function OnHyperlinkEnter(HyperFrame, link, text)
-	local linkType = strsplit(":", link)
-	if linktypes[linkType] and not IsModifiedClick() then
-		ChatFrame_OnHyperlinkShow(HyperFrame, link, texT)
-	end
-end	
+local function OnHyperlinkEnter(frame, link, ...)
+    local linktype = link:match('^([^:]+)')
+    if (linktype and linktypes[linktype]) then
+        GameTooltip:SetOwner(ChatFrame1, 'ANCHOR_CURSOR', 0, 20)
+        GameTooltip:SetHyperlink(link)
+        GameTooltip:Show()
+    else
+        GameTooltip:Hide()
+    end
 
-local function OnHyperlinkLeave(HyperFrame, link, text)
-	local linkType = strsplit(":", link)
-	if linktypes[linkType] and not IsModifiedClick() then
-		ChatFrame_OnHyperlinkShow(HyperFrame, link, text)
-	end
-end	]]	
+    if (orig1[frame]) then
+        return orig1[frame](frame, link, ...)
+    end
+end
 
+local function OnHyperlinkLeave(frame, ...)
+    GameTooltip:Hide()
+
+    if (orig2[frame]) then
+        return orig2[frame](frame, ...)
+    end
+end
+
+local function EnableItemLinkTooltip()
+    for _, v in pairs(CHAT_FRAMES) do
+        local chat = _G[v]
+        if (chat and not chat.URLCopy) then
+            orig1[chat] = chat:GetScript('OnHyperlinkEnter')
+            chat:SetScript('OnHyperlinkEnter', OnHyperlinkEnter)
+
+            orig2[chat] = chat:GetScript('OnHyperlinkLeave')
+            chat:SetScript('OnHyperlinkLeave', OnHyperlinkLeave)
+            chat.URLCopy = true
+        end
+    end
+end
+hooksecurefunc('FCF_OpenTemporaryWindow', EnableItemLinkTooltip)
+EnableItemLinkTooltip()
+--[[
 local tooltipForLinkType = {
 	-- Normal tooltip things:
 	achievement  = ItemRefTooltip,
@@ -291,8 +322,8 @@ frame:RegisterEvent('PLAYER_LOGIN')
 
 if ItemRefTooltip and ItemRefCloseButton then
 	ItemRefTooltip.CloseButton = ItemRefCloseButton
-end		
-
+end	
+]]
 local function ModChat(self)
 	local chat = _G[self]
 	local font, fontsize, fontflags = chat:GetFont()
@@ -343,7 +374,14 @@ local function ModChat(self)
 		'ButtonFrameTopTexture',
 	}) do
 		_G[self..texture]:SetTexture(nil)
-	end			
+	end	
+
+        -- Modify the editbox
+
+    for k = 3, 8 do
+        select(k, _G[self..'EditBox']:GetRegions()):SetTexture(nil)
+    end
+
 end
 
 local function SetChatStyle()

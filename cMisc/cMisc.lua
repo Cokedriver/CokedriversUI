@@ -22,13 +22,13 @@ if db.cCoords == true then
 	CoordsFrame.Player = CoordsFrame:CreateFontString(nil, 'OVERLAY')
 	CoordsFrame.Player:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
 	CoordsFrame.Player:SetJustifyH('LEFT')
-	CoordsFrame.Player:SetPoint('BOTTOMLEFT', WorldMapFrame.BorderFrame, "BOTTOMLEFT", 10, 8)
+	CoordsFrame.Player:SetPoint('BOTTOM', WorldMapFrame.BorderFrame, "BOTTOM", -100, 8)
 	CoordsFrame.Player:SetTextColor(1, 0.82, 0)
 
 	CoordsFrame.Cursor = CoordsFrame:CreateFontString(nil, 'OVERLAY')
 	CoordsFrame.Cursor:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
 	CoordsFrame.Cursor:SetJustifyH('LEFT')
-	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', WorldMapFrame.BorderFrame, "BOTTOMLEFT", 175, 8)
+	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', CoordsFrame.Player, "BOTTOMLEFT", 120, 0)
 	CoordsFrame.Cursor:SetTextColor(1, 0.82, 0)
 
 	CoordsFrame:SetScript('OnUpdate', function(self, elapsed)
@@ -37,19 +37,24 @@ if db.cCoords == true then
 		local mx, my = WorldMapDetailFrame:GetCenter()
 		local px, py = GetPlayerMapPosition('player')
 		local cx, cy = GetCursorPosition()
+		
+		if (px) then
+			mx = ((cx / WorldMapDetailFrame:GetEffectiveScale()) - (mx - width / 2)) / width
+			my = ((my + height / 2) - (cy / WorldMapDetailFrame:GetEffectiveScale())) / height
 
-		mx = ((cx / WorldMapDetailFrame:GetEffectiveScale()) - (mx - width / 2)) / width
-		my = ((my + height / 2) - (cy / WorldMapDetailFrame:GetEffectiveScale())) / height
+			if (mx >= 0 and my >= 0 and mx <= 1 and my <= 1) then
+				CoordsFrame.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
+			else
+				CoordsFrame.Cursor:SetText('')
+			end
 
-		if (mx >= 0 and my >= 0 and mx <= 1 and my <= 1) then
-			CoordsFrame.Cursor:SetText(MOUSE_LABEL..format(': %.0f x %.0f', mx * 100, my * 100))
+			if (px ~= 0 and py ~= 0) then
+				CoordsFrame.Player:SetText(" "..PLAYER..format(': %.0f x %.0f', px * 100, py * 100).." / ")
+			else
+				CoordsFrame.Player:SetText('')
+			end
 		else
 			CoordsFrame.Cursor:SetText('')
-		end
-
-		if (px ~= 0 and py ~= 0) then
-			CoordsFrame.Player:SetText("Coords - "..PLAYER..format(': %.0f x %.0f', px * 100, py * 100))
-		else
 			CoordsFrame.Player:SetText('')
 		end
 	end)

@@ -17,8 +17,7 @@ cData.pluginConstructors["coords"] = function()
 	cData:PlacePlugin(db.coords, Text)
 
 	local function Update(self)
-	local px,py=GetPlayerMapPosition("player")
-		Text:SetText(format(hexa.."Loc: "..hexb.."%i , %i",px*100,py*100))
+	local px, py = GetPlayerMapPosition("player")	
 	end
 
 	plugin:SetScript("OnUpdate", Update)

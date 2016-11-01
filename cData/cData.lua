@@ -85,7 +85,7 @@ function cData:CreatePanels()
 	cDataMainPanel:SetPoint("BOTTOM", UIParent, 0, 0)
 	cDataMainPanel:SetWidth(1200)
 	cDataMainPanel:SetBackdrop({ 
-		bgFile = [[Interface\DialogFrame\UI-DialogBox-Background-Dark]], 
+		bgFile = [[Interface\ChatFrame\ChatFrameBackground]], 
 		edgeFile = [[Interface\AddOns\cData\Media\UI-DialogBox-Border.blp]], 
 		edgeSize = 25, insets = { left = 5, right = 5, top = 5, bottom = 5 } 
 	})
@@ -146,6 +146,13 @@ function cData:CreatePanels()
 end
 
 function cData:SetBattlegroundPanel()
+
+	--WoW API / Variables
+	local GetNumBattlefieldScores = GetNumBattlefieldScores
+	local GetBattlefieldScore = GetBattlefieldScore
+	local GetCurrentMapAreaID = GetCurrentMapAreaID
+	local GetBattlefieldStatInfo = GetBattlefieldStatInfo
+	local GetBattlefieldStatData = GetBattlefieldStatData
 	
 	--Map IDs
 	local WSG = 443
@@ -156,9 +163,12 @@ function cData:SetBattlegroundPanel()
 	local EOTS = 482
 	local TBFG = 736
 	local AB = 461
+	local TOK = 856
+	local SSM = 860
+	local DG = 935
 
 	cDataBattleGroundStatPanel:SetScript('OnEnter', function(self)
-		local numScores = GetNumBattlefieldScores()
+		--[[local numScores = GetNumBattlefieldScores()
 		for i=1, numScores do
 			local name, killingBlows, honorableKills, deaths, honorGained, faction, race, class, classToken, damageDone, healingDone, bgRating, ratingChange = GetBattlefieldScore(i)
 			if ( name ) then
@@ -196,7 +206,50 @@ function cData:SetBattlegroundPanel()
 					GameTooltip:Show()
 				end
 			end
-		end
+		end]]
+		
+		local CurrentMapID = GetCurrentMapAreaID()
+		for index=1, GetNumBattlefieldScores() do
+			name = GetBattlefieldScore(index)
+			if name then
+				GameTooltip:SetOwner(self, 'ANCHOR_TOPLEFT', 0, 4)
+				GameTooltip:ClearLines()
+				GameTooltip:SetPoint('BOTTOM', self, 'TOP', 0, 1)
+				GameTooltip:ClearLines()
+				GameTooltip:AddLine("Stats for : "..hexa..name..hexb)
+				GameTooltip:AddLine(" ")
+
+				--Add extra statistics to watch based on what BG you are in.
+				if CurrentMapID == WSG or CurrentMapID == TP then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+				elseif CurrentMapID == EOTS then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+				elseif CurrentMapID == AV then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(3), GetBattlefieldStatData(index, 3),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(4), GetBattlefieldStatData(index, 4),1,1,1)
+				elseif CurrentMapID == SOTA then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+				elseif CurrentMapID == IOC or CurrentMapID == TBFG or CurrentMapID == AB then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+				elseif CurrentMapID == TOK then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+				elseif CurrentMapID == SSM then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+				elseif CurrentMapID == DG then
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(1), GetBattlefieldStatData(index, 1),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(2), GetBattlefieldStatData(index, 2),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(3), GetBattlefieldStatData(index, 3),1,1,1)
+					GameTooltip:AddDoubleLine(GetBattlefieldStatInfo(4), GetBattlefieldStatData(index, 4),1,1,1)
+				end
+				break
+			end
+		end		
 	end) 
 	cDataBattleGroundStatPanel:SetScript('OnLeave', function(self) GameTooltip:Hide() end)
 

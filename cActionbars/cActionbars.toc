@@ -1,7 +1,7 @@
-## Interface: 70000
+## Interface: 70100
 ## Title: cActionbars
 ## Notes: Cokedriver's Actionbar Modification Addon
 ## Author: Cokedriver
-## Version: 7.0.3
+## Version: 7.1.0
 
 cActionbars.lua
