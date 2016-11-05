@@ -73,7 +73,9 @@ cData.pluginConstructors["dur"] = function()
 			GameTooltip:SetOwner(panel, anchor, xoff, yoff)
 			GameTooltip:ClearLines()
 			GameTooltip:AddLine(hexa..PLAYER_NAME.."'s"..hexb.." Durability")
-			GameTooltip:AddLine' '			
+			GameTooltip:AddLine' '
+			GameTooltip:AddDoubleLine("Current "..STAT_AVERAGE_ITEM_LEVEL, format("%.1f", GetAverageItemLevel("player")))
+			GameTooltip:AddLine' '
 			for i = 1, 11 do
 				if Slots[i][3] ~= 1000 then
 					local green, red
