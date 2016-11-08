@@ -100,6 +100,7 @@ local cfg = {
     showMouseoverTarget = true,
     showSpecializationIcon = true,
 	showItemLevel = true,
+	bgDarkness = 1,								-- Set Background Transparency
 
     healthbar = {
 
@@ -139,12 +140,11 @@ local tankIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:0:0
 local healIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:0:0:64:64:20:39:1:20|t'
 local damagerIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:0:0:64:64:20:39:22:41|t'
 
--- _G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {r = 0, g = 0, b = 0}
+ --_G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {r = 0, g = 0, b = 0}
 
     -- Some tooltip changes
 
 if (cfg.fontOutline) then
-
     GameTooltipText:SetFont('Fonts\\ARIALN.ttf', (cfg.fontSize), 'THINOUTLINE')
     GameTooltipText:SetShadowOffset(0, 0)
 
@@ -157,7 +157,7 @@ end
 
 GameTooltipStatusBar:SetHeight(7)
 GameTooltipStatusBar:SetBackdrop({bgFile = 'Interface\\Buttons\\WHITE8x8'})
-GameTooltipStatusBar:SetBackdropColor(0, 1, 0, 0.3)
+GameTooltipStatusBar:SetBackdropColor(0, 1, 0, cfg.bgDarkness)
 
 local function ApplyTooltipStyle(self)
     local bgsize, bsize
@@ -185,15 +185,15 @@ local function ApplyTooltipStyle(self)
 	})
 
     self:HookScript('OnShow', function(self)
-        self:SetBackdropColor(0, 0, 0, 0.7)
+        self:SetBackdropColor(0, 0, 0, cfg.bgDarkness)
     end)
 
     self:HookScript('OnHide', function(self)
-        self:SetBackdropColor(0, 0, 0, 0.7)
+        self:SetBackdropColor(0, 0, 0, cfg.bgDarkness)
     end)
 
     self:HookScript('OnUpdate', function(self)
-        self:SetBackdropColor(0, 0, 0, 0.7)
+        self:SetBackdropColor(0, 0, 0, cfg.bgDarkness)
     end)
 
 end

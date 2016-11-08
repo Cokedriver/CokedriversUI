@@ -1,30 +1,10 @@
 
-local TransparentChatBubbles = false
-local BubbleBobble = true
-
 local type = type
 local select = select
-local unpack = unpack
-local tostring = tostring
-local concat = table.concat
-local find = string.find
 local gsub = string.gsub
 local format = string.format
-local classColor = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[select(2, UnitClass("player"))]
-local disableFade = false
-local chatOutline = false
-local windowBorder = false
-local enableBorder = false
-local enableBottomButton =  false
-local enableHyperlinkTooltip = true
-local enableBorderColoring = true
-local chatTab = {
-	fontSize = 15,
-	fontOutline = true, 
-	normalColor = {r = 1, g = 1, b = 1},
-	specialColor = {r = 1, g = 0, b = 1},
-	selectedColor = {r = 0, g = 0.75, b = 1},
-}		
+local HIDE_BUTTONS = false
+local FULL_MOVEMENT = false
 
 CHAT_FRAME_TAB_SELECTED_MOUSEOVER_ALPHA = 1
 CHAT_FRAME_TAB_SELECTED_NOMOUSE_ALPHA = 0
@@ -85,14 +65,9 @@ local function FCF_AddMessage(self, text, ...)
 end
 
 	-- Modify the editbox
-	
---[[for k = 6, 11 do
-   select(k, ChatFrame1EditBox:GetRegions()):SetTexture(1,1,1,0)
-end]]
 
 ChatFrame1EditBox:SetAltArrowKeyMode(false)
 ChatFrame1EditBox:ClearAllPoints()
---ChatFrame1EditBox:SetFont('Fonts\\FRIZQT__.TTF', 15)
 ChatFrame1EditBox:SetPoint('BOTTOMLEFT', ChatFrame1, 'TOPLEFT', 2, 33)
 ChatFrame1EditBox:SetPoint('BOTTOMRIGHT', ChatFrame1, 'TOPRIGHT', 0, 33)
 ChatFrame1EditBox:SetBackdrop({
@@ -103,22 +78,15 @@ ChatFrame1EditBox:SetBackdrop({
 })
 
 
-ChatFrame1EditBox:SetBackdropColor(0, 0, 0, 0.5)
+ChatFrame1EditBox:SetBackdropColor(0, 0, 0, 1)
 
 
-	-- Hide the menu and friend button
-
-QuickJoinToastButton:SetAlpha(0)
-QuickJoinToastButton:EnableMouse(false)
-QuickJoinToastButton:UnregisterAllEvents()
-
+	-- Move the Toast Frame
 BNToastFrame:HookScript('OnShow', function(self)
     BNToastFrame:ClearAllPoints()
     BNToastFrame:SetPoint('BOTTOMLEFT', ChatFrame1EditBox, 'TOPLEFT', 0, 15)
 end)
 
-ChatFrameMenuButton:SetAlpha(0)
-ChatFrameMenuButton:EnableMouse(false)
 
 	-- Tab text colors for the tabs
 
@@ -142,29 +110,20 @@ end)
 
 
 
- -- Hyperlink Tooltip
+------------------------ Hyperlink Tooltip ----------------------
 local _G = getfenv(0)
 local orig1, orig2 = {}, {}
 local GameTooltip = GameTooltip
 
 local linktypes = {
-	-- Normal tooltip things:
-	achievement  = true,
-	enchant      = true,
-	glyph        = true,
-	item         = true,
-	instancelock = true,
-	quest        = true,
-	spell        = true,
-	talent       = true,
-	unit         = true,
-	currency     = true,
-	-- Special tooltip things:
-	battlepet           = true,
-	battlePetAbil       = true,
-	garrfollowerability = true,
-	garrfollower        = true,
-	garrmission         = true,
+    item = true,
+    enchant = true,
+    spell = true,
+    quest = true,
+    unit = true,
+    talent = true,
+    achievement = true,
+    glyph = true
 }
 
 local function OnHyperlinkEnter(frame, link, ...)
@@ -205,159 +164,39 @@ local function EnableItemLinkTooltip()
 end
 hooksecurefunc('FCF_OpenTemporaryWindow', EnableItemLinkTooltip)
 EnableItemLinkTooltip()
---[[
-local tooltipForLinkType = {
-	-- Normal tooltip things:
-	achievement  = ItemRefTooltip,
-	enchant      = ItemRefTooltip,
-	glyph        = ItemRefTooltip,
-	item         = ItemRefTooltip,
-	instancelock = ItemRefTooltip,
-	quest        = ItemRefTooltip,
-	spell        = ItemRefTooltip,
-	talent       = ItemRefTooltip,
-	unit         = ItemRefTooltip,
-	currency     = ItemRefTooltip,
-	-- Special tooltip things:
-	battlepet           = FloatingBattlePetTooltip,
-	battlePetAbil       = FloatingPetBattleAbilityTooltip,
-	garrfollowerability = FloatingGarrisonFollowerAbilityTooltip,
-	garrfollower        = FloatingGarrisonFollowerTooltip,
-	garrmission         = FloatingGarrisonMissionTooltip,
-}
 
-local allowReposition, data = true, { }
-
-local function RepositionTooltip(tooltip)
-	local button = GetMouseFocus()
-	if button:IsObjectType('HyperLinkButton') then
-		data.tooltip, data.point, data.relFrame, data.relPoint, data.x, data.y = tooltip, tooltip:GetPoint()
-		local uiX, uiY = UIParent:GetCenter()
-		local x, y = button:GetCenter()
-		tooltip:ClearAllPoints()
-		if x <= uiX then
-			if y <= uiY then
-				tooltip:SetPoint('BOTTOMLEFT', button, 'TOPRIGHT', 2, -4)
-			else
-				tooltip:SetPoint('TOPLEFT', button, 'BOTTOMRIGHT', 2, 0)
-			end
-		elseif y <= uiY then
-			tooltip:SetPoint('BOTTOMRIGHT', button, 'TOPLEFT', 0, -4)
-		else
-			tooltip:SetPoint('TOPRIGHT', button, 'BOTTOMLEFT', 0, 0)
-		end
-		if tooltip.CloseButton then
-			tooltip.CloseButton:Hide()
-		end
-	end
-end
-
-local function RestoreTooltip(tooltip)
-	if tooltip and tooltip == data.tooltip then
-		data.tooltip = nil
-		tooltip:ClearAllPoints()
-		tooltip:SetPoint(data.point, data.relFrame, data.relPoint, data.x, data.y)
-		if tooltip.CloseButton then
-			tooltip.CloseButton:Show()
-		end
-		return tooltip
-	end
-end
-
-local function OnHyperlinkEnter(frame, linkData, link)
-	local tooltip = tooltipForLinkType[linkData:match("^(.-):")]
-	if tooltip then
-		tooltip:Hide()
-		SetItemRef(linkData, link, 'LeftButton', frame)
-		if allowReposition then
-			RepositionTooltip(tooltip)
-		end
-	end
-end
-
-local function OnHyperlinkLeave(frame, linkData, link)
-	local tooltip = RestoreTooltip(tooltipForLinkType[linkData:match("^(.-):")])
-	if tooltip then
-		tooltip:Hide()
-	end
-end
-
-local function OnHyperlinkClick(frame, linkData, link, button)
-	local tooltip = RestoreTooltip(tooltipForLinkType[linkData:match("^(.-):")])
-	if tooltip then
-		if tooltip:IsObjectType('GameTooltip') then
-			allowReposition = nil
-			OnHyperlinkEnter(frame, linkData, link)
-			allowReposition = true
-		else
-			tooltip:Show()
-		end
-	else
-		OnHyperlinkEnter(frame, linkData, link)
-	end
-end
-
-local function RegisterMessageFrame(frame)
-	frame:HookScript('OnHyperlinkClick', OnHyperlinkClick)
-	frame:SetScript('OnHyperlinkEnter', OnHyperlinkEnter)
-	frame:SetScript('OnHyperlinkLeave', OnHyperlinkLeave)
-end
-
-local frame = CreateFrame('Frame')
-frame:SetScript('OnEvent', function(self, event, name)
-	if event == 'PLAYER_LOGIN' then
-		for index = 1, NUM_CHAT_WINDOWS do
-			RegisterMessageFrame(_G['ChatFrame' .. index])
-		end
-	end
-	if GuildBankMessageFrame then
-		RegisterMessageFrame(GuildBankMessageFrame)
-		self:UnregisterAllEvents()
-		self:SetScript('OnEvent', nil)
-	elseif event ~= 'ADDON_LOADED' then
-		self:RegisterEvent('ADDON_LOADED')
-	end
-end)
-frame:RegisterEvent('PLAYER_LOGIN')
-
-if ItemRefTooltip and ItemRefCloseButton then
-	ItemRefTooltip.CloseButton = ItemRefCloseButton
-end	
-]]
 local function ModChat(self)
 	local chat = _G[self]
 	local font, fontsize, fontflags = chat:GetFont()
-	--chat:SetFont('Fonts\\FRIZQT__.TTF', fontsize, dbOutline and 'THINOUTLINE' or fontflags)
-	chat:SetClampedToScreen(false)
-
-	chat:SetClampRectInsets(0, 0, 0, 0)
-	chat:SetMaxResize(UIParent:GetWidth(), UIParent:GetHeight())
-	chat:SetMinResize(150, 25)
+	
+	if FULL_MOVEMENT == true then
+		chat:SetClampedToScreen(false)
+		chat:SetClampRectInsets(0, 0, 0, 0)
+		chat:SetMaxResize(UIParent:GetWidth(), UIParent:GetHeight())
+		chat:SetMinResize(150, 25)
+	end
 
 	if (self ~= 'ChatFrame2') then
 		chat.AddMessage = FCF_AddMessage
 	end
 
-	--chat:HookScript('OnHyperlinkEnter', OnHyperlinkEnter)
-	--chat:HookScript('OnHyperlinkLeave', OnHyperlinkLeave)
-	
-	local buttonUp = _G[self..'ButtonFrameUpButton']
-	buttonUp:SetAlpha(0)
-	buttonUp:EnableMouse(false)
+	if HIDE_BUTTONS == true then
+		QuickJoinToastButton:SetAlpha(0)
+		QuickJoinToastButton:EnableMouse(false)
+		QuickJoinToastButton:UnregisterAllEvents()
+		
+		ChatFrameMenuButton:SetAlpha(0)
+		ChatFrameMenuButton:EnableMouse(false)	
+		
+		local buttonUp = _G[self..'ButtonFrameUpButton']
+		buttonUp:SetAlpha(0)
+		buttonUp:EnableMouse(false)
 
-	local buttonDown = _G[self..'ButtonFrameDownButton']
-	buttonDown:SetAlpha(0)
-	buttonDown:EnableMouse(false)
+		local buttonDown = _G[self..'ButtonFrameDownButton']
+		buttonDown:SetAlpha(0)
+		buttonDown:EnableMouse(false)
 
-	local buttonBottom = _G[self..'ButtonFrameBottomButton']
-	if (enableBottomButton) then
-		buttonBottom:Hide()
-		buttonBottom:ClearAllPoints()
-		buttonBottom:SetPoint('BOTTOMLEFT', chat, -1, -3)
-		buttonBottom:HookScript('OnClick', function(self)
-			self:Hide()
-		end)
-	else
+		local buttonBottom = _G[self..'ButtonFrameBottomButton']
 		buttonBottom:SetAlpha(0)
 		buttonBottom:EnableMouse(false)
 	end
@@ -390,17 +229,17 @@ local function SetChatStyle()
 		if (chat and not chat.hasModification) then
 			ModChat(chat:GetName())
 
-			local convButton = _G[chat:GetName()..'ConversationButton']
-			if (convButton) then
-				convButton:SetAlpha(0)
-				convButton:EnableMouse(false)
-			end
+			--local convButton = _G[chat:GetName()..'ConversationButton']
+			--if (convButton) then
+			--	convButton:SetAlpha(0)
+			--	convButton:EnableMouse(false)
+			--end
 
-			local chatMinimize = _G[chat:GetName()..'ButtonFrameMinimizeButton']
-			if (chatMinimize) then
-				chatMinimize:SetAlpha(0)
-				chatMinimize:EnableMouse(0)
-			end
+			--local chatMinimize = _G[chat:GetName()..'ButtonFrameMinimizeButton']
+			--if (chatMinimize) then
+			--	chatMinimize:SetAlpha(0)
+			--	chatMinimize:EnableMouse(0)
+			--end
 
 			chat.hasModification = true
 		end
