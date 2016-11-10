@@ -108,62 +108,76 @@ hooksecurefunc('ChatEdit_UpdateHeader', function(editBox)
 	ChatFrame1EditBox:SetBackdropBorderColor(info.r, info.g, info.b)
 end)
 
+-- Hyperlink
 
-
------------------------- Hyperlink Tooltip ----------------------
-local _G = getfenv(0)
-local orig1, orig2 = {}, {}
-local GameTooltip = GameTooltip
-
-local linktypes = {
-    item = true,
-    enchant = true,
-    spell = true,
-    quest = true,
-    unit = true,
-    talent = true,
-    achievement = true,
-    glyph = true
+local showLinkType = {
+	-- 1 Normal tooltip things:
+	achievement  = 1,
+	enchant      = 1,
+	glyph        = 1,
+	item         = 1,
+	instancelock = 1,
+	quest        = 1,
+	spell        = 1,
+	talent       = 1,
+	unit         = 1,
+	currency       = 1,
+	-- 2 Special tooltip things:
+	battlepet           = 2,
+	battlePetAbil       = 2,
+	garrfollowerability = 2,
+	garrfollower        = 2,
+	garrmission         = 2,
 }
 
-local function OnHyperlinkEnter(frame, link, ...)
-    local linktype = link:match('^([^:]+)')
-    if (linktype and linktypes[linktype]) then
-        GameTooltip:SetOwner(ChatFrame1, 'ANCHOR_CURSOR', 0, 20)
-        GameTooltip:SetHyperlink(link)
-        GameTooltip:Show()
-    else
-        GameTooltip:Hide()
-    end
-
-    if (orig1[frame]) then
-        return orig1[frame](frame, link, ...)
-    end
+local currentLinkType, itemRefLink, itemRefText, itemRefFrame
+ 
+local function OnHyperlinkEnter(frame, link, text)
+	currentLinkType = showLinkType[link:match("(%a+):%d+")]
+	if currentLinkType == 1 then
+		GameTooltip:SetOwner(ChatFrame1, 'ANCHOR_CURSOR', 0, 20)
+		GameTooltip:SetHyperlink(link)
+		GameTooltip:Show()
+	elseif currentLinkType == 2 then
+		-- Uses a special tooltip, just let the default function handle it.
+		SetItemRef(link, text, "LeftButton", frame)
+		itemRefLink, itemRefText, itemRefFrame = link, text, frame
+	end
 end
 
-local function OnHyperlinkLeave(frame, ...)
-    GameTooltip:Hide()
-
-    if (orig2[frame]) then
-        return orig2[frame](frame, ...)
-    end
+local function OnHyperlinkLeave(frame, link, text)
+	if currentLinkType == 1 then
+		GameTooltip:Hide()
+	elseif currentLinkType == 2 then
+		-- Uses a special tooltip, just let the default function handle it.
+		SetItemRef(itemRefLink, itemRefText, "LeftButton", itemRefFrame)
+		itemRefLink, itemRefText, itemRefFrame = nil,nil,nil
+	end
+	currentLinkType = nil
 end
-
-local function EnableItemLinkTooltip()
-    for _, v in pairs(CHAT_FRAMES) do
-        local chat = _G[v]
-        if (chat and not chat.URLCopy) then
-            orig1[chat] = chat:GetScript('OnHyperlinkEnter')
-            chat:SetScript('OnHyperlinkEnter', OnHyperlinkEnter)
-
-            orig2[chat] = chat:GetScript('OnHyperlinkLeave')
-            chat:SetScript('OnHyperlinkLeave', OnHyperlinkLeave)
-            chat.URLCopy = true
-        end
-    end
+ 
+local function RegisterFrame(frame)
+	frame:SetScript("OnHyperlinkEnter", OnHyperlinkEnter)
+	frame:SetScript("OnHyperlinkLeave", OnHyperlinkLeave)
 end
-hooksecurefunc('FCF_OpenTemporaryWindow', EnableItemLinkTooltip)
-EnableItemLinkTooltip()
+ 
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_LOGIN")
+f:SetScript("OnEvent", function(self, event, name)
+	if event == "PLAYER_LOGIN" then
+		for i = 1, NUM_CHAT_WINDOWS do
+			RegisterFrame(_G["ChatFrame"..i])
+		end
+	end
+	if GuildBankMessageFrame then
+		RegisterFrame(GuildBankMessageFrame)
+		self:UnregisterAllEvents()
+		self:SetScript("OnEvent", nil)
+		RegisterFrame = nil
+	else
+		self:RegisterEvent("ADDON_LOADED")
+	end
+end)	
 
 local function ModChat(self)
 	local chat = _G[self]
