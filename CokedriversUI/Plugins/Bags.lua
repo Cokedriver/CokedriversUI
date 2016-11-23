@@ -90,10 +90,10 @@ cData.pluginConstructors["bags"] = function()
 		self:SetAllPoints(Text)
 
 		local myPlayerName  = UnitName("player")				
-		if not cDataDB then cDataDB = {} end
-		if not cDataDB.gold then cDataDB.gold = {} end
-		if not cDataDB.gold[myPlayerRealm] then cDataDB.gold[myPlayerRealm]={} end
-		cDataDB.gold[myPlayerRealm][myPlayerName] = GetMoney()	
+		if not CokedriversUIDB then CokedriversUIDB = {} end
+		if not CokedriversUIDB.gold then CokedriversUIDB.gold = {} end
+		if not CokedriversUIDB.gold[myPlayerRealm] then CokedriversUIDB.gold[myPlayerRealm]={} end
+		CokedriversUIDB.gold[myPlayerRealm][myPlayerName] = GetMoney()	
 			
 		OldMoney = NewMoney	
 			
@@ -137,7 +137,7 @@ cData.pluginConstructors["bags"] = function()
 			
 			local totalGold = 0				
 			GameTooltip:AddLine("Character's: ")			
-			local thisRealmList = cDataDB.gold[myPlayerRealm];
+			local thisRealmList = CokedriversUIDB.gold[myPlayerRealm];
 			for k,v in pairs(thisRealmList) do
 				GameTooltip:AddDoubleLine(k, formatMoney(v), 1, 1, 1, 1, 1, 1)
 				totalGold=totalGold+v;
@@ -168,9 +168,9 @@ cData.pluginConstructors["bags"] = function()
 		local myPlayerRealm = GetRealmName();
 		local myPlayerName  = UnitName("player");
 		
-		cDataDB.gold = {}
-		cDataDB.gold[myPlayerRealm]={}
-		cDataDB.gold[myPlayerRealm][myPlayerName] = GetMoney();
+		CokedriversUIDB.gold = {}
+		CokedriversUIDB.gold[myPlayerRealm]={}
+		CokedriversUIDB.gold[myPlayerRealm][myPlayerName] = GetMoney();
 	end
 	SLASH_RESETGOLD1 = "/resetgold"
 	SlashCmdList["RESETGOLD"] = RESETGOLD	

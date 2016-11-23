@@ -12,10 +12,12 @@ db = {
 	cSpellID = true,
 	cCoords = true,
 	cErrors = true,
+	cHideHitNum = true,
 }
 
-
--- Coords From NeavUI
+----------------------------------------------------------------------
+-- Coords borrowed from NeavUI
+----------------------------------------------------------------------
 if db.cCoords == true then
 	local CoordsFrame = CreateFrame('Frame', nil, WorldMapFrame)
 	CoordsFrame:SetParent(WorldMapFrame.BorderFrame)
@@ -60,7 +62,10 @@ if db.cCoords == true then
 		end
 	end)
 end
--- SpellID From NeavUI
+
+----------------------------------------------------------------------
+-- SpellID borrowed from NeavUI
+----------------------------------------------------------------------
 if db.cSpellID == true then
 	hooksecurefunc(GameTooltip, 'SetUnitBuff', function(self,...)
 		local id = select(11, UnitBuff(...))
@@ -112,7 +117,9 @@ if db.cSpellID == true then
 
 end
 
--- Merchant
+----------------------------------------------------------------------
+-- Merchant borrowed from Tukui and NeavUI
+----------------------------------------------------------------------
 if db.cMerchant == true then
 	local merchantUseGuildRepair = false	-- let your guild pay for your repairs if they allow.
 
@@ -204,7 +211,9 @@ if db.cMerchant == true then
 	Merchant_Frame:RegisterEvent("MERCHANT_SHOW")
 end
 
---Minimap
+----------------------------------------------------------------------
+-- Minimap Modifacations
+----------------------------------------------------------------------
 if db.cMiniMap == true then
 
     -- Bigger Minimap
@@ -242,7 +251,9 @@ if db.cMiniMap == true then
 	end)
 end
 
--- Autogreed from NeavUI
+----------------------------------------------------------------------
+-- Autogreed borrowed from NeavUI
+----------------------------------------------------------------------
 if db.cAutogreed == true then
 
 	-- A skip list for green stuff you might not wanna auto-greed on
@@ -261,7 +272,9 @@ if db.cAutogreed == true then
 	end)
 end
 
---ChatBubble Frame from NeavUI
+----------------------------------------------------------------------
+--ChatBubble Frame borrowed from NeavUI
+----------------------------------------------------------------------
 if db.cChatBubble == true then
 	local events = {
 		CHAT_MSG_SAY = 'chatBubbles', 
@@ -364,7 +377,9 @@ if db.cChatBubble == true then
 	end)
 end
 
--- Powerbar From NeavUI
+----------------------------------------------------------------------
+-- Powerbar borrowed from NeavUI
+----------------------------------------------------------------------
 if db.cPowerBar == true then
 	local PowerDB = {
 		position = {'CENTER', UIParent, 0, -110},
@@ -570,12 +585,12 @@ if db.cPowerBar == true then
 	PBFrame.Power.Below = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Below:SetHeight(14)
 	PBFrame.Power.Below:SetWidth(14)
-	PBFrame.Power.Below:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowBelow]])
+	PBFrame.Power.Below:SetTexture([[Interface\AddOns\CokedriversUI\Media\textureArrowBelow]])
 
 	PBFrame.Power.Above = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Above:SetHeight(14)
 	PBFrame.Power.Above:SetWidth(14)
-	PBFrame.Power.Above:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowAbove]])
+	PBFrame.Power.Above:SetTexture([[Interface\AddOns\CokedriversUI\Media\textureArrowAbove]])
 	PBFrame.Power.Above:SetPoint('BOTTOM', PBFrame.Power.Below, 'TOP', 0, PBFrame.Power:GetHeight())
 
 	if (PowerDB.showCombatRegen) then
@@ -794,7 +809,9 @@ if db.cPowerBar == true then
 	end
 end
 
--- Rare Alert
+----------------------------------------------------------------------
+-- Rare Alert borrowed from
+----------------------------------------------------------------------
 if db.cRareAlert == true then
 	local blacklist = {
 		[971] = true, -- Alliance garrison
@@ -811,8 +828,9 @@ if db.cRareAlert == true then
 	end)
 end
 
-
--- From daftAuction by Daftwise - US Destromath
+----------------------------------------------------------------------
+-- Auction borrowed from daftAuction by Daftwise - US Destromath
+----------------------------------------------------------------------
 if db.cAuction == true then
 	local undercutPercent = .97
 
@@ -976,6 +994,9 @@ if db.cAuction == true then
 	end)
 end
 
+----------------------------------------------------------------------
+-- Errors borrowed from NeavUI
+----------------------------------------------------------------------
 if cErrors == true then
 	UIErrorsFrame:UnregisterEvent('UI_ERROR_MESSAGE')
 	UIErrorsFrame:SetTimeVisible(1)
@@ -1038,4 +1059,12 @@ if cErrors == true then
 	end)
 
 	event:RegisterEvent('UI_ERROR_MESSAGE')
+end
+
+----------------------------------------------------------------------
+-- Hide hit indicators (portrait text) borrowed from Leatrix.Plus
+----------------------------------------------------------------------
+if db.cHideHitNum == true then
+	hooksecurefunc(PlayerHitIndicator, "Show", PlayerHitIndicator.Hide)
+	hooksecurefunc(PetHitIndicator, "Show", PetHitIndicator.Hide)
 end

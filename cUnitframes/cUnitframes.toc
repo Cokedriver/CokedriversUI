@@ -1,7 +1,0 @@
-## Interface: 70100
-## Title: cUnitframes
-## Notes: Cokedriver's Unitframe Modification Addon
-## Author: Cokedriver
-## Version: 7.1.0
-
-cUnitframes.lua

@@ -1,7 +1,0 @@
-## Interface: 70100
-## Title: cChat
-## Notes: Cokedriver's Chat Modification Addon
-## Author: Cokedriver
-## Version: 7.1.0
-
-cChat.lua

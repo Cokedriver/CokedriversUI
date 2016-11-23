@@ -1,7 +1,0 @@
-## Interface: 70100
-## Title: cTooltip
-## Notes: Cokedriver's Tooltip Modification Addon
-## Author: Cokedriver
-## Version: 7.1.0
-
-cTooltip.lua

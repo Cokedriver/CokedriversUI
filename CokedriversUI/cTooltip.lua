@@ -371,13 +371,13 @@ local function GetUnitPVPIcon(unit)
 
     if (UnitIsPVPFreeForAll(unit)) then
         if (cfg.showPVPIcons) then
-            return '|TInterface\\AddOns\\cTooltip\\Media\\UI-PVP-FFA:12|t'
+            return '|TInterface\\AddOns\\CokedriversUI\\Media\\UI-PVP-FFA:12|t'
         else
             return '|cffFF0000# |r'
         end
     elseif (factionGroup and UnitIsPVP(unit)) then
         if (cfg.showPVPIcons) then
-            return '|TInterface\\AddOns\\cTooltip\\Media\\UI-PVP-'..factionGroup..':12|t'
+            return '|TInterface\\AddOns\\CokedriversUI\\Media\\UI-PVP-'..factionGroup..':12|t'
         else
             return '|cff00FF00# |r'
         end
@@ -522,8 +522,8 @@ GameTooltip:HookScript('OnTooltipSetUnit', function(self, ...)
             GameTooltipStatusBar:ClearAllPoints()
             GameTooltipStatusBar:SetPoint('LEFT', self:GetName()..'TextLeft'..self:NumLines(), 1, -3)
             GameTooltipStatusBar:SetPoint('RIGHT', self, -10, 0)
-        end
-
+        end	
+		
             -- Border coloring
 
         if (cfg.reactionBorderColor) then
@@ -617,27 +617,27 @@ GameTooltip:SetScript('OnEvent', function(self, event, GUID)
         return
     end
 
-    local _, _, _, icon = GetSpecializationInfoByID(GetInspectSpecialization(unit))
-    local now = GetTime()
+    --local _, _, _, icon = GetSpecializationInfoByID(GetInspectSpecialization(unit))
+    --local now = GetTime()
 
-    local matchFound
-    for index, _ in pairs(self.inspectCache) do
-        local inspectCache = self.inspectCache[index]
-        if (inspectCache.GUID == GUID) then
-            inspectCache.specIcon = icon and ' |T'..icon..':0|t' or ''
-            inspectCache.lastUpdate = math.floor(now)
-            matchFound = true
-        end
-    end
+    --local matchFound
+    --for index, _ in pairs(self.inspectCache) do
+        --local inspectCache = self.inspectCache[index]
+        --if (inspectCache.GUID == GUID) then
+            --inspectCache.specIcon = icon and ' |T'..icon..':0|t' or ''
+            --inspectCache.lastUpdate = math.floor(now)
+           -- matchFound = true
+        --end
+    --end
 
-    if not matchFound then
-        local GUIDInfo = {
-            ['GUID'] = GUID,
-            ['specIcon'] = icon and ' |T'..icon..':0|t' or '',
-            ['lastUpdate'] = math.floor(now)
-        }
-        table.insert(self.inspectCache, GUIDInfo)
-    end
+   -- if not matchFound then
+        --local GUIDInfo = {
+            --['GUID'] = GUID,
+            --['specIcon'] = icon and ' |T'..icon..':0|t' or '',
+            --['lastUpdate'] = math.floor(now)
+        --}
+        --table.insert(self.inspectCache, GUIDInfo)
+    --end
 
     if (#self.inspectCache > 30) then
         table.remove(self.inspectCache, 1)
