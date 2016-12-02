@@ -7,10 +7,10 @@ local function SetFont(obj, font, size, style, r, g, b, sr, sg, sb, sox, soy)
 	elseif r then obj:SetAlpha(r) end
 end
 
-local NORMAL 		= [[Interface\AddOns\CokedriversUI\Media\Expressway_Free_NORMAL.ttf]]
-local BOLD 			= [[Interface\AddOns\CokedriversUI\Media\Expressway_Rg_BOLD.ttf]]
-local ITALIC 		= [[Interface\AddOns\CokedriversUI\Media\Expressway_Sb_ITALIC.ttf]]
-local BOLDITALIC 	= [[Interface\AddOns\CokedriversUI\Media\Expressway_Rg_BOLDITALIC.ttf]]
+local NORMAL 		= [[Interface\AddOns\cFonts\Media\Expressway_Free_NORMAL.ttf]]
+local BOLD 			= [[Interface\AddOns\cFonts\Media\Expressway_Rg_BOLD.ttf]]
+local ITALIC 		= [[Interface\AddOns\cFonts\Media\Expressway_Sb_ITALIC.ttf]]
+local BOLDITALIC 	= [[Interface\AddOns\cFonts\Media\Expressway_Rg_BOLDITALIC.ttf]]
 
 
 

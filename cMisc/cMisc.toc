@@ -1,0 +1,8 @@
+## Interface: 70100
+## Title: cMisc
+## Notes: Cokedriver's Miscellaneous Modification's Addon
+## Author: Cokedriver
+## Version: 7.1.0
+## OptionalDeps: Blizzard_TradeSkillUI
+
+cMisc.lua

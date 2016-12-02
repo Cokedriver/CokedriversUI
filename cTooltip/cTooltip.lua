@@ -371,13 +371,13 @@ local function GetUnitPVPIcon(unit)
 
     if (UnitIsPVPFreeForAll(unit)) then
         if (cfg.showPVPIcons) then
-            return '|TInterface\\AddOns\\CokedriversUI\\Media\\UI-PVP-FFA:12|t'
+            return '|TInterface\\AddOns\\cTooltip\\Media\\UI-PVP-FFA:12|t'
         else
             return '|cffFF0000# |r'
         end
     elseif (factionGroup and UnitIsPVP(unit)) then
         if (cfg.showPVPIcons) then
-            return '|TInterface\\AddOns\\CokedriversUI\\Media\\UI-PVP-'..factionGroup..':12|t'
+            return '|TInterface\\AddOns\\cTooltip\\Media\\UI-PVP-'..factionGroup..':12|t'
         else
             return '|cff00FF00# |r'
         end

@@ -86,7 +86,7 @@ function cData:CreatePanels()
 	cDataMainPanel:SetWidth(1200)
 	cDataMainPanel:SetBackdrop({ 
 		bgFile = [[Interface\ChatFrame\ChatFrameBackground]], 
-		edgeFile = [[Interface\AddOns\CokedriversUI\Media\UI-DialogBox-Border.blp]], 
+		edgeFile = [[Interface\AddOns\cData\Media\UI-DialogBox-Border.blp]], 
 		edgeSize = 25, insets = { left = 5, right = 5, top = 5, bottom = 5 } 
 	})
 	cDataMainPanel:SetBackdropColor(0, 0, 0, 1)

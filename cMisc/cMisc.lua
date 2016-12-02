@@ -585,12 +585,12 @@ if db.cPowerBar == true then
 	PBFrame.Power.Below = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Below:SetHeight(14)
 	PBFrame.Power.Below:SetWidth(14)
-	PBFrame.Power.Below:SetTexture([[Interface\AddOns\CokedriversUI\Media\textureArrowBelow]])
+	PBFrame.Power.Below:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowBelow]])
 
 	PBFrame.Power.Above = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Above:SetHeight(14)
 	PBFrame.Power.Above:SetWidth(14)
-	PBFrame.Power.Above:SetTexture([[Interface\AddOns\CokedriversUI\Media\textureArrowAbove]])
+	PBFrame.Power.Above:SetTexture([[Interface\AddOns\cMisc\Media\textureArrowAbove]])
 	PBFrame.Power.Above:SetPoint('BOTTOM', PBFrame.Power.Below, 'TOP', 0, PBFrame.Power:GetHeight())
 
 	if (PowerDB.showCombatRegen) then

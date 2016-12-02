@@ -1,14 +1,12 @@
 ## Interface: 70100
-## Title: CokdriversUI
-## Notes: Cokedriver's UI Modifications
-## Version: 7.2.0
+## Title: cData
+## Notes: Cokedriver's Data Panel Addon
+## Version: 7.1.0
 ## Author: Cokedriver
-## SavedVariables: CokedriversUIDB
+## SavedVariables: cDataDB
+## SavedVariablesPerCharacter: cDataDBPerChar
 
 
-----------------------------------------------------------------------
--- Libs
-----------------------------------------------------------------------
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\AceAddon-3.0\AceAddon-3.0.xml
@@ -28,19 +26,8 @@ Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 Libs\LibBasicAdjust-1.0.lua
 Libs\tekShiner.lua
 
-----------------------------------------------------------------------
--- Modules
-----------------------------------------------------------------------
-cActionbars.lua
-cBuffs.lua
 cData.lua
-cFonts.lua
-cTooltip.lua
-cUnitframes.lua
 
-----------------------------------------------------------------------
--- Plugins for cData
-----------------------------------------------------------------------
 Plugins\Bags.lua
 Plugins\Battleground.lua
 Plugins\Call-To-Arms.lua

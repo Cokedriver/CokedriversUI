@@ -271,7 +271,7 @@ SoundFrame:RegisterEvent('CHAT_MSG_WHISPER')
 SoundFrame:RegisterEvent('CHAT_MSG_BN_WHISPER')
 SoundFrame:SetScript('OnEvent', function(_, event)
 	if (event == 'CHAT_MSG_WHISPER' or event == 'CHAT_MSG_BN_WHISPER') then
-		PlaySoundFile([[Interface\AddOns\CokedriversUI\Media\Whisper.mp3]])
+		PlaySoundFile([[Interface\AddOns\cChat\Media\Whisper.mp3]])
 	end
 end)	
 

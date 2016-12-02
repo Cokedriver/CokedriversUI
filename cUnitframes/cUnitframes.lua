@@ -4,8 +4,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 
 	if event == "ADDON_LOADED" and arg1 == "cUnitframes" then
 		local UnitScale = 1.2
-		local UnitframeFont = [[Interface\AddOns\CokedriversUI\Media\Expressway_Rg _BOLD.ttf]]
-		
+		local UnitframeFont = [[Interface\AddOns\cUnitframes\Media\Expressway_Rg _BOLD.ttf]]
+
 		--[[ Unit Font Style ]]--
 		----------------------------------------------------------
 		local shorts = {
@@ -50,8 +50,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			end
 		end)
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Unit Font Color ]]--
 		----------------------------------------------------------
 		CUSTOM_FACTION_BAR_COLORS = {
@@ -92,8 +92,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			end
 		end)
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Unit Name Background Color ]]--
 		----------------------------------------------------------
 		for _, region in pairs({
@@ -109,8 +109,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			region:SetColorTexture(0, 0, 0, 0.5)
 		end
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Unit Name Font Size ]]--
 		----------------------------------------------------------
 		for _, names in pairs({
@@ -119,11 +119,11 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			FocusFrameTextureFrameName,
 		}) do
 			names:SetFont(UnitframeFont, 16)
-		
+
 		end
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Unit Level Text Centering ]]--
 		----------------------------------------------------------
 		-- PlayerFrame
@@ -134,7 +134,7 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			PlayerLevelText:SetPoint("CENTER", PlayerFrameTexture, "CENTER", -62, -16);
 		  end
 		end)
-		
+
 		-- TargetFrame
 		hooksecurefunc("TargetFrame_UpdateLevelTextAnchor",  function(self, targetLevel)
 		  if ( targetLevel >= 100 ) then
@@ -143,36 +143,26 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			self.levelText:SetPoint("CENTER", 62, -16);
 		  end
 		end)
-		----------------------------------------------------------
-		--[[] Unit Healthbar and Powerbar Text
-		for _, HPMPText in pairs({
-			PlayerFrameHealthBarText,
-			PlayerFrameManaBarText,
-			TargetFrameTextureFrameHealthBarText,
-			TargetFrameTextureFrameManaBarText,
-		}) do
-			HPMPText:SetFont('Fonts\\ARIALN.ttf', 12, 'THINOUTLINE')
-		end]]
-		----------------------------------------------------------
-		
-		
+
+
+
 		--[[ Castbar Scaling ]]--
 		----------------------------------------------------------
 		-- Player Castbar
 		CastingBarFrame:SetScale(UnitScale)
 		--CastingBarFrame:ClearAllPoints()
 		--CastingBarFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-		
-		--[[ Target Castbar
-		Target_Spellbar_AdjustPosition = function() end
-		TargetFrameSpellBar:SetParent(UIParent)
-		TargetFrameSpellBar:ClearAllPoints()
-		TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-		TargetFrameSpellBar:SetScale(UnitScale)
-		TargetFrameSpellBar:SetScript("OnShow", nil)]]
+
+		-- Target Castbar
+		--Target_Spellbar_AdjustPosition = function() end
+		--TargetFrameSpellBar:SetParent(UIParent)
+		--TargetFrameSpellBar:ClearAllPoints()
+		--TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+		--TargetFrameSpellBar:SetScale(UnitScale)
+		--TargetFrameSpellBar:SetScript("OnShow", nil)
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Main Unit Frames Scaling ]]--
 		----------------------------------------------------------
 		for _, frames in pairs({
@@ -183,16 +173,16 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			frames:SetScale(UnitScale)
 		end
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Party Member Frame Scaling ]]--
 		----------------------------------------------------------
 		for i = 1, MAX_PARTY_MEMBERS do
 			_G["PartyMemberFrame"..i]:SetScale(UnitScale)
 		end
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Arena Frames Scaling ]]--
 		----------------------------------------------------------
 		--local function ScaleArenaFrames()
@@ -215,20 +205,19 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			--end)
 		--end
 		----------------------------------------------------------
-		
-		
+
+
 		--[[ Boss Frames Scaling ]]--
 		----------------------------------------------------------
 		for i = 1, MAX_BOSS_FRAMES do
 			_G["Boss"..i.."TargetFrame"]:SetScale(UnitScale)
 		end
 		----------------------------------------------------------
-		
 		self:UnregisterEvent("ADDON_LOADED")
-	end
+	end			
 
 	-- Nameplates Percentage
-	
+
 	local frequency = 0.2 -- how frequently to look for new nameplates and update visible percents
 	local numChildren = 0 -- number of WorldFrame's children
 	local overlays = {} -- indexed by overlay frame added to each nameplate's statusBar
@@ -248,6 +237,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 			self:SetText("") -- blank if no relevant values or value is maxValue (100% life)
 		end
 	end
+
+
 
 	-- when a nameplate shows, add it to frame.statusBars
 	local function ShowPercent(self)
@@ -322,6 +313,8 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 
 		return ('|cff%02x%02x%02x'):format(r * 255, g * 255, b * 255)
 	end	
+
+
 	local len = string.len
 	local gsub = string.gsub
 	local function UpdateName(frame)
