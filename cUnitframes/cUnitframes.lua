@@ -154,12 +154,12 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		--CastingBarFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 		-- Target Castbar
-		--Target_Spellbar_AdjustPosition = function() end
-		--TargetFrameSpellBar:SetParent(UIParent)
-		--TargetFrameSpellBar:ClearAllPoints()
-		--TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-		--TargetFrameSpellBar:SetScale(UnitScale)
-		--TargetFrameSpellBar:SetScript("OnShow", nil)
+		Target_Spellbar_AdjustPosition = function() end
+		TargetFrameSpellBar:SetParent(UIParent)
+		TargetFrameSpellBar:ClearAllPoints()
+		TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 100)
+		TargetFrameSpellBar:SetScale(UnitScale)
+		TargetFrameSpellBar:SetScript("OnShow", nil)
 		----------------------------------------------------------
 
 

@@ -579,8 +579,8 @@ if db.cPowerBar == true then
 
 	PBFrame.Power.Background = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Background:SetAllPoints(PBFrame.Power)
-	PBFrame.Power.Background:SetTexture([[Interface\DialogFrame\UI-DialogBox-Background-Dark]])
-	PBFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
+	PBFrame.Power.Background:SetTexture([[Interface\DialogFrame\UI-DialogBox-Background]])
+	--PBFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
 
 	PBFrame.Power.Below = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Below:SetHeight(14)
