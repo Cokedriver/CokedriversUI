@@ -1,7 +1,7 @@
-## Interface: 70100
+## Interface: 70200
 ## Title: cBuffs
 ## Notes: Cokedriver's Player Buff Modification Addon
 ## Author: Cokedriver
-## Version: 7.1.0
+## Version: 7.2.0
 
 cBuffs.lua

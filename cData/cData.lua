@@ -15,7 +15,7 @@ local defaults = {
 	profile = {
 		enable = true,
 		
-		font = [[Fonts\FRIZQT__.TTF]],
+		font = [[Fonts\FRIZQT__.ttf]],
 		fontSize = 15,
 			
 		battleground = true,                            	-- enable 3 stats in battleground only that replace stat1,stat2,stat3.

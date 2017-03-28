@@ -20,9 +20,11 @@ CHAT_FONT_HEIGHTS = {12, 13, 14, 15, 16, 17}
 local FONTZ = false -- Set to true only if you have not changed your master fonts.
 
 if FONTZ == true then
-	UNIT_NAME_FONT     = NORMAL
-	DAMAGE_TEXT_FONT   = NORMAL
-	STANDARD_TEXT_FONT = NORMAL	
+	UNIT_NAME_FONT     			= NORMAL
+	DAMAGE_TEXT_FONT   			= NORMAL
+	STANDARD_TEXT_FONT			= NORMAL
+	NAMEPLATE_FONT              = NORMAL
+	NAMEPLATE_SPELLCAST_FONT    = NORMAL
 end
 
 
@@ -87,7 +89,7 @@ SetFont(GameFontNormal,                		NORMAL, 15)
 SetFont(GameFontNormalLarge,                BOLD, 	17)
 SetFont(GameFontNormalHuge,                	BOLD, 	20)
 SetFont(GameFontHighlightSmallLeft,			NORMAL, 15)
---SetFont(GameNormalNumberFont,               BOLD, 13)
+SetFont(GameNormalNumberFont,               BOLD, 13)
 
 
 
@@ -106,9 +108,14 @@ for i=1,MAX_CHANNEL_BUTTONS do
 end
 
 for _,butt in pairs(PaperDollTitlesPane.buttons) do butt.text:SetFontObject(GameFontHighlightSmallLeft) end
-	
 
+	
+	
 SlashCmdList['RELOADUI'] = function()
 	ReloadUI()
 end
 	SLASH_RELOADUI1 = '/rl'
+	
+
+
+

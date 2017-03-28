@@ -4,7 +4,7 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 
 	if event == "ADDON_LOADED" and arg1 == "cUnitframes" then
 		local UnitScale = 1.2
-		local UnitframeFont = [[Interface\AddOns\cUnitframes\Media\Expressway_Rg _BOLD.ttf]]
+		local UnitframeFont = [[Interface\Addons\cUnitframes\Media\Expressway_Rg _BOLD.ttf]]
 
 		--[[ Unit Font Style ]]--
 		----------------------------------------------------------

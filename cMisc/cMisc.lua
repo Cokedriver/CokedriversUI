@@ -1,19 +1,252 @@
 
 -- Enable Seperate Parts of cMISC
 db = {
-	cMerchant = true,
-	cRareAlert = true,
-	cPowerBar = true,
-	cMiniMap = true,
 	cAltBuy = true,
+	cAuction = true,
 	cAutogreed = true,
 	cChatBubble = false,
-	cAuction = true,
-	cSpellID = true,
 	cCoords = true,
 	cErrors = true,
-	cHideHitNum = true,
+	cFastLoot = false,
+	cHideBGGossip = true,
+	cLPBorrow = true,	
+	cMerchant = true,
+	cMiniMap = true,
+	cPowerBar = true,
+	cRareAlert = true,
+	cSpellID = true,
 }
+
+
+----------------------------------------------------------------------
+-- Alt Buy Full Stacks borrowed from NeavUI
+----------------------------------------------------------------------
+if db.cAltBuy == true then
+	local NEW_ITEM_VENDOR_STACK_BUY = ITEM_VENDOR_STACK_BUY
+	ITEM_VENDOR_STACK_BUY = '|cffa9ff00'..NEW_ITEM_VENDOR_STACK_BUY..'|r'
+
+		-- alt-click to buy a stack
+
+	local origMerchantItemButton_OnModifiedClick = _G.MerchantItemButton_OnModifiedClick
+	local function MerchantItemButton_OnModifiedClickHook(self, ...)
+		origMerchantItemButton_OnModifiedClick(self, ...)
+
+		if (IsAltKeyDown()) then
+			local maxStack = select(8, GetItemInfo(GetMerchantItemLink(self:GetID())))
+
+			local numAvailable = select(5, GetMerchantItemInfo(self:GetID()))
+
+			-- -1 means an item has unlimited supply.
+			if (numAvailable ~= -1) then
+				BuyMerchantItem(self:GetID(), numAvailable)
+			else
+				BuyMerchantItem(self:GetID(), GetMerchantItemMaxStack(self:GetID()))
+			end
+		end
+	end
+	MerchantItemButton_OnModifiedClick = MerchantItemButton_OnModifiedClickHook
+
+		-- Google translate ftw...NOT
+
+	local function GetAltClickString()
+		if (GetLocale() == 'enUS') then
+			return '<Alt-click, to buy an stack>'
+		elseif (GetLocale() == 'frFR') then
+			return '<Alt-clic, d acheter une pile>'
+		elseif (GetLocale() == 'esES') then
+			return '<Alt-clic, para comprar una pila>'
+		elseif (GetLocale() == 'deDE') then
+			return '<Alt-klicken, um einen ganzen Stapel zu kaufen>'
+		else
+			return '<Alt-click, to buy an stack>'
+		end
+	end
+
+		-- add a hint to the tooltip
+
+	local function IsMerchantButtonOver()
+		return GetMouseFocus():GetName() and GetMouseFocus():GetName():find('MerchantItem%d')
+	end
+
+	GameTooltip:HookScript('OnTooltipSetItem', function(self)
+		if (MerchantFrame:IsShown() and IsMerchantButtonOver()) then
+			for i = 2, GameTooltip:NumLines() do
+				if (_G['GameTooltipTextLeft'..i]:GetText():find('<[sS]hift')) then
+					GameTooltip:AddLine('|cff00ffcc'..GetAltClickString()..'|r')
+				end
+			end
+		end
+	end)
+end
+
+----------------------------------------------------------------------
+-- Auction borrowed from daftAuction by Daftwise - US Destromath
+----------------------------------------------------------------------
+if db.cAuction == true then
+
+	-----------START CONFIG------------
+
+	local UNDERCUT = .97; -- .97 is a 3% undercut
+	local PRICE_BY = "QUALITY" -- When no matches are found, set price based on QUALITY or VENDOR
+
+	-- PRICE BY QUALITY, where 1000 = 1 gold
+		local POOR_PRICE = 100000
+		local COMMON_PRICE = 200000
+		local UNCOMMON_PRICE = 2500000
+		local RARE_PRICE = 5000000
+		local EPIC_PRICE = 10000000
+
+	-- PRICE BY VENDOR, where formula is vendor price * number
+		local POOR_MULTIPLIER = 20
+		local COMMON_MULTIPLIER = 30
+		local UNCOMMMON_MULTIPLIER = 40
+		local RARE_MULTIPLIER = 50
+		local EPIC_MULTIPLIER = 60
+
+	local STARTING_MULTIPLIER = 0.9
+
+	---------END CONFIG---------
+
+	local cAuction = CreateFrame("Frame", "cAuction", UIParent)
+
+	cAuction:RegisterEvent("AUCTION_HOUSE_SHOW")
+	cAuction:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
+
+	local selectedItem
+	local selectedItemVendorPrice
+	local selectedItemQuality
+	local currentPage = 0
+	local myBuyoutPrice, myStartPrice
+	local myName = UnitName("player")
+
+	cAuction:SetScript("OnEvent", function(self, event)
+		
+		if event == "AUCTION_HOUSE_SHOW" then
+				
+			AuctionsItemButton:HookScript("OnEvent", function(self, event)
+				
+				if event=="NEW_AUCTION_UPDATE" then -- user placed an item into auction item box
+					self:SetScript("OnUpdate", nil)
+					myBuyoutPrice = nil
+					myStartPrice = nil
+					currentPage = 0
+					selectedItem = nil
+					selectedItem, texture, count, quality, canUse, price, _, stackCount, totalCount, selectedItemID = GetAuctionSellItemInfo();
+					local canQuery = CanSendAuctionQuery()
+					
+					if canQuery and selectedItem then -- query auction house based on item name
+						ResetCursor()
+						QueryAuctionItems(selectedItem)
+					end
+				end
+			end)
+
+		elseif event == "AUCTION_ITEM_LIST_UPDATE" then -- the auction list was updated or sorted
+			
+			if (selectedItem ~= nil) then -- an item was placed in the auction item box
+				local batch, totalAuctions = GetNumAuctionItems("list")
+				
+				if totalAuctions == 0 then -- No matches
+					_, _, selectedItemQuality, selectedItemLevel, _, _, _, _, _, _, selectedItemVendorPrice = GetItemInfo(selectedItem)
+								
+					if PRICE_BY == "QUALITY" then
+					
+						if selectedItemQuality == 0 then myBuyoutPrice = POOR_PRICE end
+						if selectedItemQuality == 1 then myBuyoutPrice = COMMON_PRICE end
+						if selectedItemQuality == 2 then myBuyoutPrice = UNCOMMON_PRICE end
+						if selectedItemQuality == 3 then myBuyoutPrice = RARE_PRICE end
+						if selectedItemQuality == 4 then myBuyoutPrice = EPIC_PRICE end
+					
+					elseif PRICE_BY == "VENDOR" then
+					
+						if selectedItemQuality == 0 then myBuyoutPrice = selectedItemVendorPrice * POOR_MULTIPLIER end
+						if selectedItemQuality == 1 then myBuyoutPrice = selectedItemVendorPrice * COMMON_MULTIPLIER end
+						if selectedItemQuality == 2 then myBuyoutPrice = selectedItemVendorPrice * UNCOMMMON_MULTIPLIER end
+						if selectedItemQuality == 3 then myBuyoutPrice = selectedItemVendorPrice * RARE_MULTIPLIER end
+						if selectedItemQuality == 4 then myBuyoutPrice = selectedItemVendorPrice * EPIC_MULTIPLIER end
+					end
+					
+					myStartPrice = myBuyoutPrice * STARTING_MULTIPLIER
+				end
+				
+				local currentPageCount = floor(totalAuctions/50)
+				
+				for i=1, batch do -- SCAN CURRENT PAGE
+					local postedItem, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner = GetAuctionItemInfo("list",i)
+					
+					if postedItem == selectedItem and owner ~= myName and buyoutPrice ~= nil then -- selected item matches the one found on auction list
+						
+						if myBuyoutPrice == nil and myStartPrice == nil then
+							myBuyoutPrice = (buyoutPrice/count) * UNDERCUT;
+							myStartPrice = (minBid/count) * UNDERCUT;
+							
+						elseif myBuyoutPrice > (buyoutPrice/count) then
+							myBuyoutPrice = (buyoutPrice/count) * UNDERCUT;
+							myStartPrice = (minBid/count) * UNDERCUT;
+						end;
+					end;
+				end;
+				
+				if currentPage < currentPageCount then -- GO TO NEXT PAGES
+					
+					self:SetScript("OnUpdate", function(self, elapsed)
+						
+						if not self.timeSinceLastUpdate then 
+							self.timeSinceLastUpdate = 0 ;
+						end;
+						self.timeSinceLastUpdate = self.timeSinceLastUpdate + elapsed;
+						
+						if self.timeSinceLastUpdate > .1 then -- a cycle has passed, run this
+							selectedItem = GetAuctionSellItemInfo();
+							local canQuery = CanSendAuctionQuery();
+							
+							if canQuery then -- check the next page of auctions
+								currentPage = currentPage + 1;
+								QueryAuctionItems(selectedItem, nil, nil, currentPage);
+								self:SetScript("OnUpdate", nil);
+							end
+							self.timeSinceLastUpdate = 0;
+						end;
+					end);
+				
+				else -- ALL PAGES SCANNED
+					self:SetScript("OnUpdate", nil)
+					local stackSize = AuctionsStackSizeEntry:GetNumber();
+						
+					if myStartPrice ~= nil then
+							
+						if stackSize > 1 then -- this is a stack of items
+								
+							if UIDropDownMenu_GetSelectedValue(PriceDropDown) == PRICE_TYPE_UNIT then -- input price per item
+								MoneyInputFrame_SetCopper(StartPrice, myStartPrice);
+								MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice);
+								
+							else -- input price for entire stack
+								MoneyInputFrame_SetCopper(StartPrice, myStartPrice*stackSize);
+								MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice*stackSize);
+							end
+							
+						else -- this is not a stack
+							MoneyInputFrame_SetCopper(StartPrice, myStartPrice);
+							MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice);
+						end
+						
+						if UIDropDownMenu_GetSelectedValue(DurationDropDown) ~= 3 then 
+							UIDropDownMenu_SetSelectedValue(DurationDropDown, 3); -- set duration to 3 (48h)
+							DurationDropDownText:SetText("48 Hours"); -- set duration text since it keeps bugging to "Custom"
+						end;
+					end
+						
+					myBuyoutPrice = nil;
+					myStartPrice = nil;
+					currentPage = 0;
+					selectedItem = nil;
+					stackSize = nil;
+				end
+			end
+		end
+	end)
+end
 
 ----------------------------------------------------------------------
 -- Coords borrowed from NeavUI
@@ -23,13 +256,13 @@ if db.cCoords == true then
 	CoordsFrame:SetParent(WorldMapFrame.BorderFrame)
 
 	CoordsFrame.Player = CoordsFrame:CreateFontString(nil, 'OVERLAY')
-	CoordsFrame.Player:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
+	CoordsFrame.Player:SetFont([[Fonts\FRIZQT__.ttf]], 15, 'THINOUTLINE')
 	CoordsFrame.Player:SetJustifyH('LEFT')
 	CoordsFrame.Player:SetPoint('BOTTOM', WorldMapFrame.BorderFrame, "BOTTOM", -100, 8)
 	CoordsFrame.Player:SetTextColor(1, 0.82, 0)
 
 	CoordsFrame.Cursor = CoordsFrame:CreateFontString(nil, 'OVERLAY')
-	CoordsFrame.Cursor:SetFont('Fonts\\ARIALN.ttf', 15, 'THINOUTLINE')
+	CoordsFrame.Cursor:SetFont([[Fonts\FRIZQT__.ttf]], 15, 'THINOUTLINE')
 	CoordsFrame.Cursor:SetJustifyH('LEFT')
 	CoordsFrame.Cursor:SetPoint('BOTTOMLEFT', CoordsFrame.Player, "BOTTOMLEFT", 120, 0)
 	CoordsFrame.Cursor:SetTextColor(1, 0.82, 0)
@@ -256,24 +489,29 @@ end
 ----------------------------------------------------------------------
 if db.cAutogreed == true then
 
+	-- Option to only auto-greed at max level.
+	local maxLevelOnly = true
+
 	-- A skip list for green stuff you might not wanna auto-greed on
 	local skipList = {
 		--['Stone Scarab'] = true,
 		--['Silver Scarab'] = true,
 	}
 
-	local AutogreedFrame = CreateFrame('Frame')
-	AutogreedFrame:RegisterEvent('START_LOOT_ROLL')
-	AutogreedFrame:SetScript('OnEvent', function(_, _, rollID)
-		local _, name, _, quality, BoP, _, _, canDisenchant = GetLootRollItemInfo(rollID)
-		if (quality == 2 and not BoP and not skipList[name]) then
-			RollOnLoot(rollID, canDisenchant and 3 or 2)
+	local AutoGreedFrame = CreateFrame('Frame')
+	AutoGreedFrame:RegisterEvent('START_LOOT_ROLL')
+	AutoGreedFrame:SetScript('OnEvent', function(_, _, rollID)
+		if (maxLevelOnly and UnitLevel('player') == MAX_PLAYER_LEVEL) then
+			local _, name, _, quality, BoP, _, _, canDisenchant = GetLootRollItemInfo(rollID)
+			if (quality == 2 and not BoP and not skipList[name]) then
+				RollOnLoot(rollID, canDisenchant and 3 or 2)
+			end
 		end
 	end)
 end
 
 ----------------------------------------------------------------------
---ChatBubble Frame borrowed from NeavUI
+-- ChatBubble Frame borrowed from NeavUI
 ----------------------------------------------------------------------
 if db.cChatBubble == true then
 	local events = {
@@ -394,7 +632,7 @@ if db.cPowerBar == true then
 
 		valueAbbrev = true,
 
-		valueFont = 'Fonts\\ARIALN.ttf',
+		valueFont = [[Fonts\FRIZQT__.ttf]],
 		valueFontSize = 20,
 		valueFontOutline = true,
 		valueFontAdjustmentX = 0,
@@ -407,7 +645,7 @@ if db.cPowerBar == true then
 		showArcaneCharges = true,
 
 		-- Resource text shown above the bar.
-		extraFont = 'Fonts\\ARIALN.ttf',
+		extraFont = [[Fonts\FRIZQT__.ttf]],
 		extraFontSize = 22,
 		extraFontOutline = true,
 
@@ -434,7 +672,7 @@ if db.cPowerBar == true then
 		rune = {
 			show = true,
 
-			runeFont = 'Fonts\\ARIALN.ttf',
+			runeFont = [[Fonts\FRIZQT__.ttf]],
 			runeFontSize = 20,
 			runeFontOutline = true,
 		},
@@ -532,6 +770,7 @@ if db.cPowerBar == true then
 			RuneFrame:UnregisterAllEvents()
 			_G['RuneButtonIndividual'..i]:Hide()
 		end
+		
 		PBFrame.Rune = {}
 
 		for i = 1, 6 do
@@ -549,12 +788,13 @@ if db.cPowerBar == true then
 			PBFrame.Rune[i]:SetParent(PBFrame)
 		end
 
-		PBFrame.Rune[1]:SetPoint('CENTER', -65, 0)
-		PBFrame.Rune[2]:SetPoint('CENTER', -39, 0)
-		PBFrame.Rune[3]:SetPoint('CENTER', 39, 0)
-		PBFrame.Rune[4]:SetPoint('CENTER', 65, 0)
-		PBFrame.Rune[5]:SetPoint('CENTER', -13, 0)
-		PBFrame.Rune[6]:SetPoint('CENTER', 13, 0)
+ 		PBFrame.Rune[1]:SetPoint('CENTER', -65, 0) 
+ 		PBFrame.Rune[2]:SetPoint('CENTER', -39, 0) 
+ 		PBFrame.Rune[3]:SetPoint('CENTER', 39, 0) 
+ 		PBFrame.Rune[4]:SetPoint('CENTER', 65, 0) 
+ 		PBFrame.Rune[5]:SetPoint('CENTER', -13, 0) 
+ 		PBFrame.Rune[6]:SetPoint('CENTER', 13, 0) 
+
 	end
 
 	PBFrame.Power = CreateFrame('StatusBar', nil, UIParent)
@@ -580,7 +820,7 @@ if db.cPowerBar == true then
 	PBFrame.Power.Background = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Background:SetAllPoints(PBFrame.Power)
 	PBFrame.Power.Background:SetTexture([[Interface\DialogFrame\UI-DialogBox-Background]])
-	--PBFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
+	PBFrame.Power.Background:SetVertexColor(0.25, 0.25, 0.25, 1)
 
 	PBFrame.Power.Below = PBFrame.Power:CreateTexture(nil, 'BACKGROUND')
 	PBFrame.Power.Below:SetHeight(14)
@@ -829,172 +1069,6 @@ if db.cRareAlert == true then
 end
 
 ----------------------------------------------------------------------
--- Auction borrowed from daftAuction by Daftwise - US Destromath
-----------------------------------------------------------------------
-if db.cAuction == true then
-	local undercutPercent = .97
-
-	local duration = 3 -- 1, 2, 3 for 12h, 24h, 48h
-
-
-	local PRICE_BY = "VENDOR" -- QUALITY or VENDOR
-
-	-- PRICE BY QUALITY, where 1000 = 1 gold
-		local POOR_PRICE = 100000
-		local COMMON_PRICE = 200000
-		local UNCOMMON_PRICE = 2500000
-		local RARE_PRICE = 5000000
-		local EPIC_PRICE = 10000000
-
-	-- PRICE BY VENDOR, where formula is vendor price * number
-		local POOR_MULTIPLIER = 20
-		local COMMON_MULTIPLIER = 30
-		local UNCOMMMON_MULTIPLIER = 40
-		local RARE_MULTIPLIER = 50
-		local EPIC_MULTIPLIER = 60
-
-	local STARTING_MULTIPLIER = 0.9
-
-	---------END CONFIG---------
-
-	local cAuction = CreateFrame("Frame", "cAuction", UIParent)
-
-	cAuction:RegisterEvent("AUCTION_HOUSE_SHOW")
-	cAuction:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
-
-	local selectedItem
-	local selectedItemVendorPrice
-	local selectedItemQuality
-	local currentPage = 0
-	local myBuyoutPrice, myStartPrice
-	local myName = UnitName("player")
-
-	cAuction:SetScript("OnEvent", function(self, event)
-		
-		if event == "AUCTION_HOUSE_SHOW" then
-				
-			AuctionsItemButton:HookScript("OnEvent", function(self, event)
-				
-				if event=="NEW_AUCTION_UPDATE" then -- user placed an item into auction item box
-					self:SetScript("OnUpdate", nil)
-					myBuyoutPrice = nil
-					myStartPrice = nil
-					currentPage = 0
-					selectedItem = nil
-					selectedItem, texture, count, quality, canUse, price, _, stackCount, totalCount, selectedItemID = GetAuctionSellItemInfo();
-					local canQuery = CanSendAuctionQuery()
-					
-					if canQuery and selectedItem then -- query auction house based on item name
-						ResetCursor()
-						QueryAuctionItems(selectedItem)
-					end
-				end
-			end)
-
-		elseif event == "AUCTION_ITEM_LIST_UPDATE" then -- the auction list was updated or sorted
-			
-			if (selectedItem ~= nil) then -- an item was placed in the auction item box
-				local batch, totalAuctions = GetNumAuctionItems("list")
-				
-				if totalAuctions == 0 then -- No matches
-					_, _, selectedItemQuality, selectedItemLevel, _, _, _, _, _, _, selectedItemVendorPrice = GetItemInfo(selectedItem)
-								
-					if PRICE_BY == "QUALITY" then
-					
-						if selectedItemQuality == 0 then myBuyoutPrice = POOR_PRICE end
-						if selectedItemQuality == 1 then myBuyoutPrice = COMMON_PRICE end
-						if selectedItemQuality == 2 then myBuyoutPrice = UNCOMMON_PRICE end
-						if selectedItemQuality == 3 then myBuyoutPrice = RARE_PRICE end
-						if selectedItemQuality == 4 then myBuyoutPrice = EPIC_PRICE end
-					
-					elseif PRICE_BY == "VENDOR" then
-					
-						if selectedItemQuality == 0 then myBuyoutPrice = selectedItemVendorPrice * POOR_MULTIPLIER end
-						if selectedItemQuality == 1 then myBuyoutPrice = selectedItemVendorPrice * COMMON_MULTIPLIER end
-						if selectedItemQuality == 2 then myBuyoutPrice = selectedItemVendorPrice * UNCOMMMON_MULTIPLIER end
-						if selectedItemQuality == 3 then myBuyoutPrice = selectedItemVendorPrice * RARE_MULTIPLIER end
-						if selectedItemQuality == 4 then myBuyoutPrice = selectedItemVendorPrice * EPIC_MULTIPLIER end
-					end
-					
-					myStartPrice = myBuyoutPrice * STARTING_MULTIPLIER
-				end
-				
-				local currentPageCount = floor(totalAuctions/50)
-				
-				for i=1, batch do -- SCAN CURRENT PAGE
-					local postedItem, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner = GetAuctionItemInfo("list",i)
-					
-					if postedItem == selectedItem and owner ~= myName then -- selected item matches the one found on auction list
-						
-						if myBuyoutPrice == nil and myStartPrice == nil then
-							myBuyoutPrice = (buyoutPrice/count) * undercutPercent
-							myStartPrice = (minBid/count) * undercutPercent
-							
-						elseif myBuyoutPrice > (buyoutPrice/count) then
-							myBuyoutPrice = (buyoutPrice/count) * undercutPercent
-							myStartPrice = (minBid/count) * undercutPercent
-						end
-					end
-				end
-				
-				if currentPage < currentPageCount then -- GO TO NEXT PAGES
-					
-					self:SetScript("OnUpdate", function(self, elapsed)
-						
-						if not self.timeSinceLastUpdate then 
-							self.timeSinceLastUpdate = 0 
-						end
-						self.timeSinceLastUpdate = self.timeSinceLastUpdate + elapsed
-						
-						if self.timeSinceLastUpdate > .1 then -- a cycle has passed, run this
-							selectedItem = GetAuctionSellItemInfo()
-							local canQuery = CanSendAuctionQuery()
-							
-							if canQuery then -- check the next page of auctions
-								currentPage = currentPage + 1
-								QueryAuctionItems(selectedItem, nil, nil, currentPage)
-								self:SetScript("OnUpdate", nil)
-							end
-							self.timeSinceLastUpdate = 0
-						end
-					end)
-				
-				else -- ALL PAGES SCANNED
-					self:SetScript("OnUpdate", nil)
-					local stackSize = AuctionsStackSizeEntry:GetNumber()
-						
-					if myStartPrice ~= nil then
-							
-						if stackSize > 1 then -- this is a stack of items
-								
-							if UIDropDownMenu_GetSelectedValue(PriceDropDown) == PRICE_TYPE_UNIT then -- input price per item
-								MoneyInputFrame_SetCopper(StartPrice, myStartPrice)
-								MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice)
-								
-							else -- input price for entire stack
-								MoneyInputFrame_SetCopper(StartPrice, myStartPrice*stackSize)
-								MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice*stackSize)
-							end
-							
-						else -- this is not a stack
-							MoneyInputFrame_SetCopper(StartPrice, myStartPrice) 
-							MoneyInputFrame_SetCopper(BuyoutPrice, myBuyoutPrice)
-						end
-						
-						UIDropDownMenu_SetSelectedValue(DurationDropDown, 3);
-					end
-						
-					myBuyoutPrice = nil
-					myStartPrice = nil
-					currentPage = 0
-					selectedItem = nil
-				end
-			end
-		end
-	end)
-end
-
-----------------------------------------------------------------------
 -- Errors borrowed from NeavUI
 ----------------------------------------------------------------------
 if cErrors == true then
@@ -1062,9 +1136,87 @@ if cErrors == true then
 end
 
 ----------------------------------------------------------------------
--- Hide hit indicators (portrait text) borrowed from Leatrix.Plus
+--	Faster looting
 ----------------------------------------------------------------------
-if db.cHideHitNum == true then
+
+if db.cFastLoot == true then
+	-- Time delay
+	local tDelay = 2
+
+	-- Fast loot function
+	local function FastLoot()
+		if GetTime() - tDelay >= 0.3 then
+			tDelay = GetTime()
+			if GetCVarBool("autoLootDefault") ~= IsModifiedClick("AUTOLOOTTOGGLE") then
+				for i = GetNumLootItems(), 1, -1 do
+					LootSlot(i)
+				end
+				tDelay = GetTime()
+			end
+		end
+	end
+
+	-- Event frame
+	local faster = CreateFrame("Frame")
+	faster:RegisterEvent("LOOT_READY")
+	faster:SetScript("OnEvent", FastLoot)
+end
+
+
+
+
+if db.cHideBGGossip == true then
+	local gFrame = CreateFrame("FRAME")
+	gFrame:RegisterEvent("GOSSIP_SHOW")
+	gFrame:SetScript("OnEvent", function()
+		-- Do nothing if shift is being held
+		if IsShiftKeyDown() then return end
+		-- Traverse faction IDs for known bodyguards (http://www.wowhead.com/factions/warlords-of-draenor/barracks-bodyguards)
+		local id = GetFriendshipReputation();
+		if id then
+			if id == 1733 -- Delvar Ironfist
+			or id == 1736 -- Tormmok
+			or id == 1737 -- Talonpriest Ishaal
+			or id == 1738 -- Defender Illona
+			or id == 1739 -- Vivianne
+			or id == 1740 -- Aeda Brightdawn
+			or id == 1741 -- Leorajh
+			or id == 599 -- Koltira Deathweaver 
+			then
+				-- Close gossip window if it's for a cooperating (active) bodyguard
+				if UnitCanCooperate("target", "player") then
+					CloseGossip()
+				end
+			end
+		end
+	end)
+end
+
+----------------------------------------------------------------------
+-- borrowed from Leatrix.Plus
+----------------------------------------------------------------------
+if db.cLPBorrow == true then
+
+	-- Hide hit indicators (portrait text)
 	hooksecurefunc(PlayerHitIndicator, "Show", PlayerHitIndicator.Hide)
 	hooksecurefunc(PetHitIndicator, "Show", PetHitIndicator.Hide)
+	
+	-- Disable warning for attempting to loot a Bind on Pickup item
+	if event == "LOOT_BIND_CONFIRM" then
+		ConfirmLootSlot(arg1, arg2)
+		StaticPopup_Hide("LOOT_BIND",...)
+		return
+	end
+
+	-- Disable warning for attempting to vendor an item within its refund window
+	if event == "MERCHANT_CONFIRM_TRADE_TIMER_REMOVAL" then
+		SellCursorItem()
+		return
+	end
+
+	-- Disable warning for attempting to mail an item within its refund window
+	if event == "MAIL_LOCK_SEND_ITEMS" then
+		RespondMailLockSendItem(arg1, true)
+		return
+	end	
 end

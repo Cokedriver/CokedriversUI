@@ -108,7 +108,7 @@ local cfg = {
         healthFullFormat = '$cur',              -- if the tooltip unit has 100% hp
 
         fontSize = 13,
-        font = 'Fonts\\ARIALN.ttf',
+        font = [[Fonts\FRIZQT__.ttf]],
         showOutline = true,
         textPos = 'CENTER',                     -- Possible 'TOP' 'BOTTOM' 'CENTER'
 
@@ -145,14 +145,14 @@ local damagerIcon = '|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:13:13:
     -- Some tooltip changes
 
 if (cfg.fontOutline) then
-    GameTooltipText:SetFont('Fonts\\ARIALN.ttf', (cfg.fontSize), 'THINOUTLINE')
+    GameTooltipText:SetFont([[Fonts\FRIZQT__.ttf]], (cfg.fontSize), 'THINOUTLINE')
     GameTooltipText:SetShadowOffset(0, 0)
 
-    GameTooltipTextSmall:SetFont('Fonts\\ARIALN.ttf', (cfg.fontSize), 'THINOUTLINE')
+    GameTooltipTextSmall:SetFont([[Fonts\FRIZQT__.ttf]], (cfg.fontSize), 'THINOUTLINE')
     GameTooltipTextSmall:SetShadowOffset(0, 0)
 else
-    GameTooltipText:SetFont('Fonts\\ARIALN.ttf', (cfg.fontSize))
-    GameTooltipTextSmall:SetFont('Fonts\\ARIALN.ttf', (cfg.fontSize))
+    GameTooltipText:SetFont([[Fonts\FRIZQT__.ttf]], (cfg.fontSize))
+    GameTooltipTextSmall:SetFont([[Fonts\FRIZQT__.ttf]], (cfg.fontSize))
 end
 
 GameTooltipStatusBar:SetHeight(7)
