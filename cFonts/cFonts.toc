@@ -2,7 +2,7 @@
 ## Title: cFonts
 ## Notes: Cokedriver's Font Modification Addon
 ## Author: Cokedriver
-## Version: 7.2.0
+## Version: 7.2.1
 ## SavedVariables: cFontsDB
 
 cFonts.lua

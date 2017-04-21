@@ -2,6 +2,6 @@
 ## Title: cChat
 ## Notes: Cokedriver's Chat Modification Addon
 ## Author: Cokedriver
-## Version: 7.2.0
+## Version: 7.2.1
 
 cChat.lua

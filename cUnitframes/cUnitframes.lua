@@ -154,12 +154,12 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		--CastingBarFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 		-- Target Castbar
-		Target_Spellbar_AdjustPosition = function() end
-		TargetFrameSpellBar:SetParent(UIParent)
-		TargetFrameSpellBar:ClearAllPoints()
-		TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 100)
-		TargetFrameSpellBar:SetScale(UnitScale)
-		TargetFrameSpellBar:SetScript("OnShow", nil)
+		--Target_Spellbar_AdjustPosition = function() end
+		--TargetFrameSpellBar:SetParent(UIParent)
+		--TargetFrameSpellBar:ClearAllPoints()
+		--TargetFrameSpellBar:SetPoint("CENTER", UIParent, "CENTER", 0, 100)
+		--TargetFrameSpellBar:SetScale(UnitScale)
+		--TargetFrameSpellBar:SetScript("OnShow", nil)
 		----------------------------------------------------------
 
 
@@ -214,163 +214,369 @@ cUnitframes:SetScript("OnEvent", function(self, event, arg1)
 		end
 		----------------------------------------------------------
 		self:UnregisterEvent("ADDON_LOADED")
-	end			
-
-	-- Nameplates Percentage
-
-	local frequency = 0.2 -- how frequently to look for new nameplates and update visible percents
-	local numChildren = 0 -- number of WorldFrame's children
-	local overlays = {} -- indexed by overlay frame added to each nameplate's statusBar
-
-	local PercentFrame = CreateFrame("Frame",nil,UIParent)
-	PercentFrame.timer = 0
-	PercentFrame.knownChildren = 0 -- number of WorldFrame's children that we know about
-
-	-- updates the percentOverlay text on the nameplate's statusbar
-	local function UpdatePercent(self)
-		local parent = self:GetParent()
-		local value = parent:GetValue()
-		local _,maxValue = parent:GetMinMaxValues()
-		if maxValue and value<maxValue then
-			self:SetText(('|cFF%2x%2x%2x%s|r'):format(255, 255, 51, format("%d%%",100*value/maxValue)))
-		else
-			self:SetText("") -- blank if no relevant values or value is maxValue (100% life)
-		end
-	end
-
-
-
-	-- when a nameplate shows, add it to frame.statusBars
-	local function ShowPercent(self)
-		overlays[self.percentOverlay] = 1
-	end
-
-	-- when a nameplate hides, remove it from frame.statusBars
-	local function HidePercent(self)
-		overlays[self.percentOverlay] = nil
-		self.percentOverlay:SetText("") -- blank for when nameplate reused
-	end
-
-	-- look for new nameplates that don't have a percent overlay and add one
-	function PercentFrame:ScanNameplates(...)
-	  for i=1,select("#",...) do
-		local plate = select(i,...)
-			local name = plate:GetName()
-			if name and name:match("^NamePlate") then
-				-- the statusBar is the first child of the first child of the nameplate
-				local statusBar = plate:GetChildren():GetChildren()
-				if not statusBar.percentOverlay then
-					statusBar.percentOverlay = statusBar:CreateFontString(nil,"OVERLAY","ReputationDetailFont")
-					local percent = statusBar.percentOverlay
-					percent:SetPoint("CENTER")
-					statusBar:HookScript("OnShow",ShowPercent)
-					statusBar:HookScript("OnHide",HidePercent)
-					overlays[statusBar.percentOverlay] = 1 -- add new child to next update batch
-				end
-		end
-	  end
-	end
-
-	function PercentFrame:OnUpdate(elapsed)
-		self.timer = self.timer + elapsed
-		if self.timer > frequency then
-			self.timer = 0
-			-- first look for any new nameplates (if WorldFrame has a new kid, it's likely a nameplate)
-		numChildren = WorldFrame:GetNumChildren()
-			if numChildren > self.knownChildren then
-				self.knownChildren = numChildren
-		  self:ScanNameplates(WorldFrame:GetChildren())
-		end
-			-- next update percents for all visible nameplate statusBars
-			for overlay in pairs(overlays) do
-				UpdatePercent(overlay)
-			end
-	  end
-	end
-	PercentFrame:SetScript("OnUpdate",PercentFrame.OnUpdate)
-
-	-- Borrowerd from nPlates by Grimsbain
-	local config = {
-		-- Colors by threat. Green = Tanking, Orange = Loosing Threat, Red = Lost Threat
-		colorNameWithThreat = false,
-
-		showLevel = true,
-		showServerName = false,
-		abbrevLongNames = true,
-
-		-- Use class colors on all player nameplates.
-		alwaysUseClassColors = true,
-	}	
-
-	local function RGBHex(r, g, b)
-		if ( type(r) == 'table' ) then
-			if ( r.r ) then
-				r, g, b = r.r, r.g, r.b
-			else
-				r, g, b = unpack(r)
-			end
-		end
-
-		return ('|cff%02x%02x%02x'):format(r * 255, g * 255, b * 255)
 	end	
+	
+  
+end)
 
+-------------------------------------------------
+-- Borrowerd from nPlates by Grimsbain
+-------------------------------------------------
+local cPlates = CreateFrame("Frame")
 
-	local len = string.len
-	local gsub = string.gsub
-	local function UpdateName(frame)
-		if ( string.match(frame.displayedUnit,'nameplate') ~= 'nameplate' ) then return end
+local len = string.len
+local gsub = string.gsub
 
+---------------
+-- Functions
+---------------
 
-		if ( not ShouldShowName(frame) ) then
-			frame.name:Hide()
+	-- PvP Icon
+local pvpIcons = {
+	Alliance = "\124TInterface/PVPFrame/PVP-Currency-Alliance:16\124t",
+	Horde = "\124TInterface/PVPFrame/PVP-Currency-Horde:16\124t",
+}
+
+cPlates.PvPIcon = function(unit)
+	if ( cPlatesDB.ShowPvP and UnitIsPlayer(unit) ) then
+		local isPVP = UnitIsPVP(unit)
+		local faction = UnitFactionGroup(unit)
+		local icon = (isPVP and faction) and pvpIcons[faction] or ""
+
+		return icon
+	end
+	return ""
+end
+
+	-- Check for "Larger Nameplates"
+
+cPlates.IsUsingLargerNamePlateStyle = function()
+	local namePlateVerticalScale = tonumber(GetCVar("NamePlateVerticalScale"))
+	return namePlateVerticalScale > 1.0
+end
+
+	-- Check if the frame is a nameplate.
+
+cPlates.FrameIsNameplate = function(frame)
+	if ( string.match(frame.displayedUnit,"nameplate") ~= "nameplate") then
+		return false
+	else
+		return true
+	end
+end
+
+	-- Checks to see if target has tank role.
+
+cPlates.PlayerIsTank = function(target)
+	local assignedRole = UnitGroupRolesAssigned(target)
+
+	return assignedRole == "TANK"
+end
+
+	-- Abbreviate Function
+
+cPlates.Abbrev = function(str,length)
+	if ( str ~= nil and length ~= nil ) then
+		str = (len(str) > length) and gsub(str, "%s?(.[\128-\191]*)%S+%s", "%1. ") or str
+		return str
+	end
+	return ""
+end
+
+	-- RBG to Hex Colors
+
+cPlates.RGBHex = function(r, g, b)
+	if ( type(r) == "table" ) then
+		if ( r.r ) then
+			r, g, b = r.r, r.g, r.b
 		else
+			r, g, b = unpack(r)
+		end
+	end
 
-				-- Friendly Nameplate Class Color
+	return ("|cff%02x%02x%02x"):format(r * 255, g * 255, b * 255)
+end
 
-			if ( config.alwaysUseClassColors ) then
-				if ( UnitIsPlayer(frame.displayedUnit) ) then
-					frame.name:SetTextColor(frame.healthBar:GetStatusBarColor())
-					DefaultCompactNamePlateFriendlyFrameOptions.useClassColors = true
-				end
+-- Off Tank Color Checks
+
+cPlates.UseOffTankColor = function(target)
+	if ( cPlatesDB.UseOffTankColor and (UnitPlayerOrPetInRaid(target) or UnitPlayerOrPetInParty(target)) ) then
+		if ( not UnitIsUnit("player",target) and cPlates.PlayerIsTank(target) and cPlates.PlayerIsTank("player") ) then
+			return true
+		end
+	end
+	return false
+end
+
+	-- Format Health
+	
+cPlates.FormatValue = function(number)
+	if number < 1e3 then
+		return floor(number)
+	elseif number >= 1e12 then
+		return string.format("%.3ft", number/1e12)
+	elseif number >= 1e9 then
+		return string.format("%.3fb", number/1e9)
+	elseif number >= 1e6 then
+		return string.format("%.2fm", number/1e6)
+	elseif number >= 1e3 then
+		return string.format("%.1fk", number/1e3)
+	end
+end
+
+	-- Totem Data and Functions
+
+local function TotemName(SpellID)
+	local name = GetSpellInfo(SpellID)
+	return name
+end
+
+local totemData = {
+	[TotemName(192058)] = "Interface\\Icons\\spell_nature_brilliance",          -- Lightning Surge Totem
+	[TotemName(98008)]  = "Interface\\Icons\\spell_shaman_spiritlink",          -- Spirit Link Totem
+	[TotemName(192077)] = "Interface\\Icons\\ability_shaman_windwalktotem",     -- Wind Rush Totem
+	[TotemName(204331)] = "Interface\\Icons\\spell_nature_wrathofair_totem",    -- Counterstrike Totem
+	[TotemName(204332)] = "Interface\\Icons\\spell_nature_windfury",            -- Windfury Totem
+	[TotemName(204336)] = "Interface\\Icons\\spell_nature_groundingtotem",      -- Grounding Totem
+	-- Water
+	[TotemName(157153)] = "Interface\\Icons\\ability_shaman_condensationtotem", -- Cloudburst Totem
+	[TotemName(5394)]   = "Interface\\Icons\\INV_Spear_04",                     -- Healing Stream Totem
+	[TotemName(108280)] = "Interface\\Icons\\ability_shaman_healingtide",       -- Healing Tide Totem
+	-- Earth
+	[TotemName(207399)] = "Interface\\Icons\\spell_nature_reincarnation",       -- Ancestral Protection Totem
+	[TotemName(198838)] = "Interface\\Icons\\spell_nature_stoneskintotem",      -- Earthen Shield Totem
+	[TotemName(51485)]  = "Interface\\Icons\\spell_nature_stranglevines",       -- Earthgrab Totem
+	[TotemName(61882)]  = "Interface\\Icons\\spell_shaman_earthquake",          -- Earthquake Totem
+	[TotemName(196932)] = "Interface\\Icons\\spell_totem_wardofdraining",       -- Voodoo Totem
+	-- Fire
+	[TotemName(192222)] = "Interface\\Icons\\spell_shaman_spewlava",            -- Liquid Magma Totem
+	[TotemName(204330)] = "Interface\\Icons\\spell_fire_totemofwrath",          -- Skyfury Totem
+	-- Totem Mastery
+	[TotemName(202188)] = "Interface\\Icons\\spell_nature_stoneskintotem",      -- Resonance Totem
+	[TotemName(210651)] = "Interface\\Icons\\spell_shaman_stormtotem",          -- Storm Totem
+	[TotemName(210657)] = "Interface\\Icons\\spell_fire_searingtotem",          -- Ember Totem
+	[TotemName(210660)] = "Interface\\Icons\\spell_nature_invisibilitytotem",   -- Tailwind Totem
+}
+
+cPlates.UpdateTotemIcon = function(frame)
+	if ( not cPlates.FrameIsNameplate(frame) ) then return end
+
+	local name = UnitName(frame.displayedUnit)
+
+	if name == nil then return end
+	if (totemData[name] and cPlatesDB.ShowTotemIcon ) then
+		if (not frame.TotemIcon) then
+			frame.TotemIcon = CreateFrame("Frame", "$parentTotem", frame)
+			frame.TotemIcon:EnableMouse(false)
+			frame.TotemIcon:SetSize(24, 24)
+			frame.TotemIcon:SetPoint("BOTTOM", frame.BuffFrame, "TOP", 0, 10)
+		end
+
+		if (not frame.TotemIcon.Icon) then
+			frame.TotemIcon.Icon = frame.TotemIcon:CreateTexture("$parentIcon","BACKGROUND")
+			frame.TotemIcon.Icon:SetSize(24,24)
+			frame.TotemIcon.Icon:SetAllPoints(frame.TotemIcon)
+			frame.TotemIcon.Icon:SetTexture(totemData[name])
+			frame.TotemIcon.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+		end
+
+		if (not frame.TotemIcon.Icon.Border) then
+			frame.TotemIcon.Icon.Border = frame.TotemIcon:CreateTexture("$parentOverlay", "BORDER")
+			frame.TotemIcon.Icon.Border:SetTexCoord(0, 1, 0, 1)
+			frame.TotemIcon.Icon.Border:ClearAllPoints()
+			frame.TotemIcon.Icon.Border:SetPoint("TOPRIGHT", frame.TotemIcon.Icon, 2.5, 2.5)
+			frame.TotemIcon.Icon.Border:SetPoint("BOTTOMLEFT", frame.TotemIcon.Icon, -2.5, -2.5)
+			frame.TotemIcon.Icon.Border:SetTexture(iconOverlay)
+			frame.TotemIcon.Icon.Border:SetVertexColor(unpack(borderColor))
+		end
+
+		if ( frame.TotemIcon ) then
+			frame.TotemIcon:Show()
+		end
+	else
+		if (frame.TotemIcon) then
+			frame.TotemIcon:Hide()
+		end
+	end
+end
+
+	-- Set Defaults
+
+cPlates.RegisterDefaultSetting = function(key,value)
+	if ( cPlatesDB == nil ) then
+		cPlatesDB = {}
+	end
+	if ( cPlatesDB[key] == nil ) then
+		cPlatesDB[key] = value
+	end
+end	
+
+
+C_Timer.After(.1, function()
+
+		-- Set Default Options
+
+	cPlates.RegisterDefaultSetting("ColorNameByThreat", false)
+	cPlates.RegisterDefaultSetting("ShowHP", true)
+	cPlates.RegisterDefaultSetting("ShowCurHP", true)
+	cPlates.RegisterDefaultSetting("ShowPercHP", true)
+	cPlates.RegisterDefaultSetting("ShowFullHP", true)
+	cPlates.RegisterDefaultSetting("ShowLevel", true)
+	cPlates.RegisterDefaultSetting("ShowServerName", false)
+	cPlates.RegisterDefaultSetting("AbrrevLongNames", true)
+	cPlates.RegisterDefaultSetting("HideFriendly", false)
+	cPlates.RegisterDefaultSetting("DontClamp", false)
+	cPlates.RegisterDefaultSetting("ShowTotemIcon", false)
+	cPlates.RegisterDefaultSetting("UseOffTankColor", false)
+	cPlates.RegisterDefaultSetting("OffTankColor", { r = 0.60, g = 0.20, b = 1.0})
+	cPlates.RegisterDefaultSetting("ShowPvP", false)
+
+		-- Set CVars
+
+	if not InCombatLockdown() then
+		-- Set min and max scale.
+		SetCVar("namePlateMinScale", 1)
+		SetCVar("namePlateMaxScale", 1)
+
+		-- Set sticky nameplates.
+		if ( not cPlatesDB.DontClamp ) then
+			SetCVar("nameplateOtherTopInset", -1,true)
+			SetCVar("nameplateOtherBottomInset", -1,true)
+		else
+			for _, v in pairs({"nameplateOtherTopInset", "nameplateOtherBottomInset"}) do SetCVar(v, GetCVarDefault(v),true) end
+		end
+	end
+end)
+
+-----------------
+-- Update Name
+-----------------
+hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
+	if ( not cPlates.FrameIsNameplate(frame) ) then return end
+
+		-- Totem Icon
+
+	if ( cPlatesDB.ShowTotemIcon ) then
+		cPlates.UpdateTotemIcon(frame)
+	end
+
+		-- Hide Friendly Nameplates
+
+	if ( UnitIsFriend(frame.displayedUnit,"player") and not UnitCanAttack(frame.displayedUnit,"player") and cPlatesDB.HideFriendly ) then
+		frame.healthBar:Hide()
+	else
+		frame.healthBar:Show()
+	end
+
+	if ( not ShouldShowName(frame) ) then
+		frame.name:Hide()
+	else
+
+			-- PvP Icon
+
+		local pvpIcon = cPlates.PvPIcon(frame.displayedUnit)
+
+			-- Class Color Names
+
+		if ( UnitIsPlayer(frame.displayedUnit) ) then
+			local r,g,b = frame.healthBar:GetStatusBarColor()
+			frame.name:SetTextColor(r,g,b)
+		end
+
+			-- Shorten Long Names
+
+		local newName = GetUnitName(frame.displayedUnit, cPlatesDB.ShowServerName) or UNKNOWN
+		if ( cPlatesDB.AbrrevLongNames ) then
+			newName = cPlates.Abbrev(newName,20)
+		end
+
+			-- Level
+
+		if ( cPlatesDB.ShowLevel ) then
+			local playerLevel = UnitLevel("player")
+			local targetLevel = UnitLevel(frame.displayedUnit)
+			local difficultyColor = GetRelativeDifficultyColor(playerLevel, targetLevel)
+			local levelColor = cPlates.RGBHex(difficultyColor.r, difficultyColor.g, difficultyColor.b)
+
+			if ( targetLevel == -1 ) then
+				frame.name:SetText(pvpIcon..newName)
+			else
+				frame.name:SetText(pvpIcon.."|cffffff00|r"..levelColor..targetLevel.."|r "..newName)
 			end
+		else
+			frame.name:SetText(pvpIcon..newName or newName)
+		end
 
-				-- Shorten Long Names
+			-- Color Name To Threat Status
 
-			local newName = GetUnitName(frame.displayedUnit, config.showServerName) or 'Unknown'
-			if ( config.abbrevLongNames ) then
-				newName = (len(newName) > 20) and gsub(newName, '%s?(.[\128-\191]*)%S+%s', '%1. ') or newName
-			end
-
-				-- Level
-
-			if ( config.showLevel ) then
-				local playerLevel = UnitLevel('player')
-				local targetLevel = UnitLevel(frame.displayedUnit)
-				local difficultyColor = GetRelativeDifficultyColor(playerLevel, targetLevel)
-				local levelColor = RGBHex(difficultyColor.r, difficultyColor.g, difficultyColor.b)
-
-				if ( targetLevel == -1 ) then
-					frame.name:SetText(newName)
-				else
-					frame.name:SetText('|cffffff00|r'..levelColor..targetLevel..'|r '..newName)
+		if ( cPlatesDB.ColorNameByThreat ) then
+			local isTanking, threatStatus = UnitDetailedThreatSituation("player", frame.displayedUnit)
+			if ( isTanking and threatStatus ) then
+				if ( threatStatus >= 3 ) then
+					frame.name:SetTextColor(0,1,0)
+				elseif ( threatStatus == 2 ) then
+					frame.name:SetTextColor(1,0.6,0.2)
 				end
 			else
-				frame.name:SetText(newName)
-			end
-
-				-- Color Name To Threat Status
-
-			if ( config.colorNameWithThreat ) then
-				local isTanking, threatStatus = UnitDetailedThreatSituation('player', frame.displayedUnit)
-				if ( isTanking and threatStatus ) then
-					if ( threatStatus >= 3 ) then
-						frame.name:SetTextColor(0,1,0)
-					elseif ( threatStatus == 2 ) then
-						frame.name:SetTextColor(1,0.6,0.2)
-					end
+				local target = frame.displayedUnit.."target"
+				if ( cPlates.UseOffTankColor(target) ) then
+					frame.name:SetTextColor(cPlatesDB.OffTankColor.r, cPlatesDB.OffTankColor.g, cPlatesDB.OffTankColor.b)
 				end
 			end
 		end
 	end
-	hooksecurefunc('CompactUnitFrame_UpdateName', UpdateName)
 end)
+
+	-- Updated Health Text
+
+hooksecurefunc("CompactUnitFrame_UpdateStatusText", function(frame)
+	if ( not cPlates.FrameIsNameplate(frame) ) then return end
+
+	local font = select(1,frame.name:GetFont())
+	local hexa = ("|cff%.2x%.2x%.2x"):format(255, 255, 51)
+	local hexb = "|r"
+
+	if ( cPlatesDB.ShowHP ) then
+		if ( not frame.healthBar.healthString ) then
+			frame.healthBar.healthString = frame.healthBar:CreateFontString("$parentHeathValue", "OVERLAY")
+			frame.healthBar.healthString:Hide()
+			frame.healthBar.healthString:SetPoint("CENTER", frame.healthBar, 0, .5)
+			frame.healthBar.healthString:SetFont(font, 12)
+			frame.healthBar.healthString:SetShadowOffset(.5, -.5)
+		end
+	else
+		if ( frame.healthBar.healthString ) then frame.healthBar.healthString:Hide() end
+		return
+	end
+
+	local health = UnitHealth(frame.displayedUnit)
+	local maxHealth = UnitHealthMax(frame.displayedUnit)
+	local perc = (health/maxHealth)*100
+
+	if ( perc >= 100 and health > 5 and cPlatesDB.ShowFullHP ) then
+		if ( cPlatesDB.ShowCurHP and perc >= 100 ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s"..hexb, cPlates.FormatValue(health))
+		elseif ( cPlatesDB.ShowCurHP and cPlatesDB.ShowPercHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s - %s%%"..hexb, cPlates.FormatValue(health), cPlates.FormatValue(perc))
+		elseif ( cPlatesDB.ShowCurHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s"..hexb, cPlates.FormatValue(health))
+		elseif ( cPlatesDB.ShowPercHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s%%"..hexb, cPlates.FormatValue(perc))
+		else
+			frame.healthBar.healthString:SetText("")
+		end
+	elseif ( perc < 100 and health > 5 ) then
+		if ( cPlatesDB.ShowCurHP and cPlatesDB.ShowPercHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s - %s%%"..hexb, cPlates.FormatValue(health), cPlates.FormatValue(perc))
+		elseif ( cPlatesDB.ShowCurHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s"..hexb, cPlates.FormatValue(health))
+		elseif ( cPlatesDB.ShowPercHP ) then
+			frame.healthBar.healthString:SetFormattedText(hexa.."%s%%"..hexb, cPlates.FormatValue(perc))
+		else
+			frame.healthBar.healthString:SetText("")
+		end
+	else
+		frame.healthBar.healthString:SetText("")
+	end
+	frame.healthBar.healthString:Show()
+end)	

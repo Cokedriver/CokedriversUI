@@ -2,7 +2,7 @@
 ## Title: cMisc
 ## Notes: Cokedriver's Miscellaneous Modification's Addon
 ## Author: Cokedriver
-## Version: 7.2.0
+## Version: 7.2.1
 ## OptionalDeps: Blizzard_TradeSkillUI
 
 cMisc.lua
